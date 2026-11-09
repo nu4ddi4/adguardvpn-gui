@@ -44,3 +44,6 @@ _screenshot.py
 # User config (must never be committed)
 config.json
 *.log
+
+# Rust 빌드 결과
+/target/
