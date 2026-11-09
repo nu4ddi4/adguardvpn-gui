@@ -10,6 +10,7 @@ pub struct Preferences {
     pub timeout_sec: u32,
     pub favorite_locations: Vec<String>,
     pub autostart: bool,
+    pub auto_update: bool,
     pub autoconnect_mode: String,
     // Keep legacy and future preferences when saving with this version.
     #[serde(flatten)]
@@ -23,6 +24,7 @@ impl Default for Preferences {
             timeout_sec: 30,
             favorite_locations: Vec::new(),
             autostart: false,
+            auto_update: true,
             autoconnect_mode: "off".into(),
             extra: BTreeMap::new(),
         }

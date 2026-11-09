@@ -12,6 +12,17 @@ pub struct Ui {
     pub favorites: gtk::ToggleButton,
     pub locations: gtk::ListBox,
     pub location_hint: gtk::Label,
+    pub site_mode: adw::ComboRow,
+    pub site_apply: gtk::Button,
+    pub site_refresh: gtk::Button,
+    pub site_input: adw::EntryRow,
+    pub site_add: gtk::Button,
+    pub site_list: gtk::ListBox,
+    pub site_status: gtk::Label,
+    pub update_status: gtk::Label,
+    pub update_check: gtk::Button,
+    pub update_install: gtk::Button,
+    pub auto_update: adw::SwitchRow,
     pub account: gtk::Label,
     pub account_details: gtk::TextView,
     pub login: gtk::Button,
@@ -202,6 +213,50 @@ impl Ui {
             "서버 위치",
         );
 
+        let site_page = page();
+        let site_group = adw::PreferencesGroup::builder().title("사이트별 VPN 적용")
+            .description("일반: 목록에 있는 사이트는 VPN을 우회합니다. 선택: 목록에 있는 사이트에만 VPN을 적용합니다.").build();
+        let site_mode = adw::ComboRow::builder()
+            .title("적용 방식")
+            .model(&gtk::StringList::new(&[
+                "목록 사이트 제외",
+                "목록 사이트만 적용",
+            ]))
+            .build();
+        let site_apply = gtk::Button::with_label("이 모드로 전환");
+        let site_refresh = gtk::Button::with_label("목록 새로 고침");
+        site_group.add(&site_mode);
+        site_group.add(&site_apply);
+        site_group.add(&site_refresh);
+        site_page.append(&site_group);
+        let site_status = note("현재 모드를 확인하는 중…");
+        site_page.append(&site_status);
+        let entry_group = adw::PreferencesGroup::builder()
+            .title("선택한 모드의 사이트 목록")
+            .build();
+        let site_input = adw::EntryRow::builder()
+            .title("도메인·와일드카드·IP·CIDR")
+            .build();
+        let site_add = gtk::Button::with_label("목록에 추가");
+        entry_group.add(&site_input);
+        entry_group.add(&site_add);
+        site_page.append(&entry_group);
+        site_page.append(&note("루트 도메인과 하위 도메인은 별개입니다. 하위 도메인은 *.example.com처럼 추가하세요. 빈 선택 목록은 사이트를 VPN으로 보내지 않습니다."));
+        let site_list = gtk::ListBox::new();
+        site_list.set_selection_mode(gtk::SelectionMode::None);
+        site_list.add_css_class("boxed-list");
+        site_page.append(&site_list);
+        site_apply.set_sensitive(false);
+        site_add.set_sensitive(false);
+        stack.add_titled(
+            &gtk::ScrolledWindow::builder()
+                .child(&site_page)
+                .hscrollbar_policy(gtk::PolicyType::Never)
+                .build(),
+            Some("sites"),
+            "사이트 예외",
+        );
+
         let settings = page();
         let group = adw::PreferencesGroup::builder()
             .title("VPN 설정")
@@ -261,7 +316,7 @@ impl Ui {
         )));
         settings.append(&note("알림 영역이 지원되면 창을 닫아도 앱을 유지합니다. 알림 영역이 없으면 앱만 종료하고 VPN은 유지합니다."));
         settings.append(&note(
-            "고급 라우팅과 CLI 업데이트는 공식 CLI에서 관리합니다.",
+            "앱별 예외는 지원하지 않습니다. 고급 라우팅과 공식 VPN CLI 업데이트는 CLI에서 관리합니다.",
         ));
         stack.add_titled(
             &gtk::ScrolledWindow::builder()
@@ -271,11 +326,39 @@ impl Ui {
             Some("settings"),
             "설정",
         );
+        let updates = adw::PreferencesGroup::builder()
+            .title("앱 자동 업데이트")
+            .build();
+        let auto_update = adw::SwitchRow::builder()
+            .title("새 버전 자동 다운로드·설치")
+            .subtitle("사전 배포판을 포함해 6시간마다 확인합니다. 설치 시 관리자 인증이 필요할 수 있습니다.")
+            .active(prefs.auto_update)
+            .build();
+        let update_status = note("업데이트 확인 대기 중");
+        let update_check = gtk::Button::with_label("업데이트 확인·다운로드");
+        let update_install = gtk::Button::with_label("준비된 업데이트 설치");
+        update_install.set_sensitive(false);
+        updates.add(&auto_update);
+        updates.add(&update_status);
+        updates.add(&update_check);
+        updates.add(&update_install);
+        settings.append(&updates);
         protocol.set_sensitive(false);
         dns.set_sensitive(false);
         config_apply.set_sensitive(false);
         Self {
             window,
+            site_mode,
+            site_apply,
+            site_refresh,
+            site_input,
+            site_add,
+            site_list,
+            site_status,
+            update_status,
+            update_check,
+            update_install,
+            auto_update,
             toast,
             status,
             spinner,

@@ -27,7 +27,7 @@ vendor:
 source: vendor
 	python3 scripts/collect-rust-licenses.py
 	cp Cargo.toml Cargo.lock LICENSE README.md CHANGELOG.md Makefile build/source/
-	cp -r src packaging scripts docs .github build/source/
+	cp -r src packaging scripts docs .github tests build/source/
 	mkdir -p build/source/assets/icons build/rpm/SOURCES
 	cp assets/icons/adguard-gui.svg build/source/assets/icons/
 	tar -C build/source --transform 's,^\.,adguard-gui-$(VERSION),' -czf "build/rpm/SOURCES/adguard-gui-$(VERSION).tar.gz" .
