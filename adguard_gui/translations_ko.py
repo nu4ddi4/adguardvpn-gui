@@ -1,6 +1,12 @@
 """한국어 화면 문구와 서버 지명. CLI 명령·응답의 원문은 유지합니다."""
 
 KOREAN: dict[str, str] = {
+    "Refresh subscription": "구독 정보 새로 고침",
+    "Subscription unknown": "구독 정보 확인 필요",
+    "Continue signing in in the official CLI terminal.": "터미널에서 공식 CLI 로그인을 진행하세요.",
+    "Complete sign-in in the terminal. Subscription information refreshes automatically for five minutes; use Refresh subscription afterward.": "터미널에서 로그인을 완료하세요. 5분 동안 구독 정보를 자동 확인하며, 이후에는 구독 정보 새로 고침을 눌러주세요.",
+    "VPN CLI was not found. Check its path in Settings.": "VPN CLI를 찾지 못했습니다. 설정에서 실행 파일 경로를 확인하세요.",
+    "Could not open a terminal. Run adguardvpn-cli login in your terminal, then refresh the subscription.": "터미널을 열지 못했습니다. 직접 터미널에서 adguardvpn-cli login을 실행한 뒤 구독 정보를 새로 고쳐주세요.",
     "desktop client": "데스크톱 앱",
     "Home": "홈",
     "Locations": "서버 위치",

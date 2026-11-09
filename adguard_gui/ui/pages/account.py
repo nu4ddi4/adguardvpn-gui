@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
     QFormLayout,
     QFrame,
     QHBoxLayout,
     QLabel,
-    QLineEdit,
     QPushButton,
     QVBoxLayout,
     QWidget,
@@ -17,6 +16,7 @@ from adguard_gui.i18n import tr
 from adguard_gui.models.state import AppState
 from adguard_gui.models.types import LicenseInfo
 from adguard_gui.services.command_runner import CommandRunner
+from adguard_gui.services.terminal_login import launch_cli_login
 from adguard_gui.theme import (
     ACCENT,
     ACCENT_SOFT,
@@ -51,11 +51,18 @@ class AccountPage(QWidget):
         super().__init__()
         self.state = state
         self.runner = runner
+        self._login_checks_remaining = 0
+        self._login_timer = QTimer(self)
+        self._login_timer.setInterval(3000)
+        self._login_timer.timeout.connect(self._refresh_after_login)
 
         outer = QVBoxLayout(self)
         outer.setContentsMargins(32, 28, 32, 24)
         outer.setSpacing(18)
         outer.addWidget(PageHeader(tr("Account"), tr("AdGuard VPN authentication and subscription")))
+        refresh = QPushButton(tr("Refresh subscription"))
+        refresh.clicked.connect(self.runner.license)
+        outer.addWidget(refresh)
 
         self.logged_card = self._build_logged_card()
         self.login_card = self._build_login_card()
@@ -117,16 +124,10 @@ class AccountPage(QWidget):
         card = QFrame(); card.setObjectName("Card")
         layout = QVBoxLayout(card); layout.setContentsMargins(24, 22, 24, 22); layout.setSpacing(12)
 
-        layout.addWidget(SectionHeader(tr("Sign in to AdGuard VPN"), tr("Enter your AdGuard credentials")))
-
-        self.login_email = QLineEdit()
-        self.login_email.setPlaceholderText("you@example.com")
-        layout.addWidget(self.login_email)
-
-        self.login_password = QLineEdit()
-        self.login_password.setPlaceholderText(tr("Password"))
-        self.login_password.setEchoMode(QLineEdit.EchoMode.Password)
-        layout.addWidget(self.login_password)
+        layout.addWidget(SectionHeader(tr("Sign in to AdGuard VPN"), tr("Continue signing in in the official CLI terminal.")))
+        hint = QLabel(tr("Complete sign-in in the terminal. Subscription information refreshes automatically for five minutes; use Refresh subscription afterward."))
+        hint.setWordWrap(True)
+        layout.addWidget(hint)
 
         btn = QPushButton(tr("Sign in"))
         btn.setObjectName("Primary")
@@ -138,10 +139,11 @@ class AccountPage(QWidget):
 
     def _render(self, info: LicenseInfo) -> None:
         if info.logged_in:
+            self._login_timer.stop()
             self.logged_card.setVisible(True)
             self.login_card.setVisible(False)
             self.account_email.setText(info.email or "—")
-            tier = info.tier or "FREE"
+            tier = info.tier or "Subscription unknown"
             self.tier_badge.setText(tr(tier))
             if tier == "PREMIUM":
                 self.tier_badge.setStyleSheet(
@@ -170,12 +172,19 @@ class AccountPage(QWidget):
             QTimer.singleShot(800, self.runner.status)
 
     def _login(self) -> None:
-        email = self.login_email.text().strip()
-        pwd = self.login_password.text()
-        if not email or not pwd:
-            notice(self, tr("Sign in"), tr("Enter email and password."), warning=True)
+        try:
+            launch_cli_login(self.state.prefs.binary_path)
+        except FileNotFoundError:
+            notice(self, tr("Sign in"), tr("VPN CLI was not found. Check its path in Settings."), warning=True)
             return
-        self.runner.login(email, pwd)
-        from PySide6.QtCore import QTimer
-        QTimer.singleShot(800, self.runner.license)
-        self.login_password.clear()
+        except OSError:
+            notice(self, tr("Sign in"), tr("Could not open a terminal. Run adguardvpn-cli login in your terminal, then refresh the subscription."), warning=True)
+            return
+        self._login_checks_remaining = 100
+        self._login_timer.start()
+
+    def _refresh_after_login(self) -> None:
+        self._login_checks_remaining -= 1
+        self.runner.license()
+        if self._login_checks_remaining <= 0:
+            self._login_timer.stop()
