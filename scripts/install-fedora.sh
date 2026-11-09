@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 readonly REPOSITORY='nu4ddi4/adguardvpn-gui'
-version='0.3.1'
+version='0.4.0'
 local_rpm=''
 install_cli=1
 
@@ -11,7 +11,7 @@ fail() { printf '오류: %s\n' "$*" >&2; exit 1; }
 usage() {
     cat <<'HELP'
 사용법: bash install-fedora.sh [옵션]
-  --version 버전    설치할 릴리스 버전 (기본값: 0.3.1)
+  --version 버전    설치할 릴리스 버전 (기본값: 0.4.0)
   --rpm 파일       내려받은 로컬 RPM 설치 (온라인 체크섬 확인 생략)
   --skip-cli       공식 VPN CLI 설치 생략
   --help           도움말 표시
@@ -27,7 +27,7 @@ while (($#)); do
         *) fail "알 수 없는 옵션: $1" ;;
     esac
 done
-[[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail '버전 형식은 0.3.1 또는 v0.3.1이어야 합니다.'
+[[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail '버전 형식은 0.4.0 또는 v0.4.0이어야 합니다.'
 [[ "$EUID" -ne 0 ]] || fail 'sudo를 붙이지 말고 일반 사용자로 실행하세요.'
 [[ -r /etc/os-release ]] || fail '운영체제 정보를 확인할 수 없습니다.'
 # shellcheck source=/dev/null
@@ -56,14 +56,16 @@ if [[ -n "$local_rpm" ]]; then
 else
     release_url="https://github.com/$REPOSITORY/releases/download/v$version"
     printf 'AdGuard VPN GUI %s RPM을 내려받고 확인합니다…\n' "$version"
-    rpm_path="$work_dir/adguard-gui-fedora.noarch.rpm"
-    fetch "$release_url/adguard-gui-fedora.noarch.rpm" "$rpm_path"
+    rpm_name="adguard-gui-fedora.$(uname -m).rpm"
+    rpm_path="$work_dir/$rpm_name"
+    fetch "$release_url/$rpm_name" "$rpm_path"
     fetch "$release_url/SHA256SUMS" "$work_dir/SHA256SUMS"
-    awk '$2 == "adguard-gui-fedora.noarch.rpm" { print }' "$work_dir/SHA256SUMS" > "$work_dir/rpm.sha256"
+    awk -v name="$rpm_name" '$2 == name { print }' "$work_dir/SHA256SUMS" > "$work_dir/rpm.sha256"
     [[ "$(wc -l < "$work_dir/rpm.sha256")" -eq 1 ]] || fail 'RPM 체크섬 항목이 없거나 중복되어 있습니다.'
     (cd "$work_dir" && sha256sum --check --status rpm.sha256) || fail 'RPM 체크섬이 일치하지 않습니다.'
 fi
 
+printf '기존 앱 창이 열려 있다면 종료한 뒤 새 GTK 앱을 실행하세요.\n'
 printf 'DNF로 앱과 필수 구성 요소를 설치합니다. 관리자 비밀번호가 필요할 수 있습니다.\n'
 sudo dnf install -y "$rpm_path" tar gzip util-linux
 
@@ -87,4 +89,5 @@ if command -v adguardvpn-cli >/dev/null; then
 else
     printf '  /opt/adguardvpn_cli/adguardvpn-cli login\n'
 fi
+printf 'GTK 앱 직접 실행: /usr/bin/adguard-gui\n'
 printf '앱 제거: sudo dnf remove adguard-gui (공식 CLI와 사용자 설정은 유지됩니다.)\n'
