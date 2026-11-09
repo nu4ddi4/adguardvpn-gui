@@ -1,6 +1,12 @@
 name: Fedora RPM 빌드
 on:
   workflow_call:
+    inputs:
+      source_ref:
+        description: 빌드할 릴리스 태그
+        required: false
+        type: string
+        default: ""
 permissions:
   contents: read
 jobs:
@@ -12,13 +18,21 @@ jobs:
       - name: 빌드 도구 설치
         run: dnf install -y git make rpm-build python3 tar gzip
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref || github.ref }}
       - name: 버전 확인
         id: version
         shell: bash
+        env:
+          SOURCE_REF: ${{ inputs.source_ref }}
         run: |
           version=$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
           if [[ "$GITHUB_REF_TYPE" == tag && "$GITHUB_REF_NAME" != "v$version" ]]; then
             echo '오류: 릴리스 태그와 앱 버전이 다릅니다.' >&2
+            exit 1
+          fi
+          if [[ -n "$SOURCE_REF" && "${SOURCE_REF#refs/tags/}" != "v$version" ]]; then
+            echo '오류: 선택한 태그와 앱 버전이 다릅니다.' >&2
             exit 1
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"

@@ -2,11 +2,20 @@ name: Fedora 릴리스 배포
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 다시 게시할 기존 릴리스 태그
+        required: true
+        default: v0.3.0
+        type: string
 permissions:
   contents: read
 jobs:
   fedora:
     uses: ./.github/workflows/fedora-rpm.yml
+    with:
+      source_ref: ${{ inputs.tag || github.ref }}
   release:
     name: RPM·간편 설치 파일 게시
     needs: fedora
@@ -15,17 +24,22 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - uses: actions/download-artifact@v4
         with:
           name: fedora-rpm
           path: dist
       - name: 릴리스 안내 확인
         shell: bash
-        run: test -f "docs/releases/$GITHUB_REF_NAME.md"
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: test -f "docs/releases/$RELEASE_TAG.md"
       - uses: softprops/action-gh-release@v2
         with:
-          name: 'AdGuard VPN GUI ${{ github.ref_name }} — Fedora 한국어판'
-          body_path: docs/releases/${{ github.ref_name }}.md
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          name: 'AdGuard VPN GUI ${{ inputs.tag || github.ref_name }} — Fedora 한국어판'
+          body_path: docs/releases/${{ inputs.tag || github.ref_name }}.md
           prerelease: true
           fail_on_unmatched_files: true
           files: dist/*
