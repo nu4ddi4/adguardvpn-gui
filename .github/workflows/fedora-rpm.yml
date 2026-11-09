@@ -1,0 +1,46 @@
+name: Fedora RPM 빌드
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  rpm:
+    name: Fedora RPM 생성
+    runs-on: ubuntu-latest
+    container: fedora:43
+    steps:
+      - name: 빌드 도구 설치
+        run: dnf install -y git make rpm-build python3 tar gzip
+      - uses: actions/checkout@v4
+      - name: 버전 확인
+        id: version
+        shell: bash
+        run: |
+          version=$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+          if [[ "$GITHUB_REF_TYPE" == tag && "$GITHUB_REF_NAME" != "v$version" ]]; then
+            echo '오류: 릴리스 태그와 앱 버전이 다릅니다.' >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Python·설치 스크립트 문법 확인
+        run: |
+          python3 -m compileall -q adguard_gui
+          bash -n scripts/install-fedora.sh
+      - name: RPM 빌드
+        run: make rpm VERSION=${{ steps.version.outputs.version }}
+      - name: 배포 파일과 체크섬 준비
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp build/rpm/RPMS/noarch/adguard-gui-*.noarch.rpm dist/adguard-gui-fedora.noarch.rpm
+          cp scripts/install-fedora.sh dist/install-fedora.sh
+          cp packaging/install-fedora.desktop dist/install-fedora.desktop
+          cp docs/설치-안내.md dist/설치-안내.md
+          cp build/rpm/SOURCES/adguard-gui-*.tar.gz dist/
+          cd dist
+          sha256sum *.rpm *.sh *.desktop *.md *.tar.gz > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fedora-rpm
+          path: dist/*
+          if-no-files-found: error

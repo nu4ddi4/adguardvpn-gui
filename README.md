@@ -1,112 +1,70 @@
-# AdGuard VPN GUI
+# AdGuard VPN GUI — 한국어판
 
-> Unofficial modern desktop GUI for the official [`adguardvpn-cli`](https://github.com/AdguardTeam/AdGuardVPNCLI) on Linux.
+공식 [`adguardvpn-cli`](https://github.com/AdguardTeam/AdGuardVPNCLI)를 사용하는 **비공식 Linux 데스크톱 앱**입니다.
+한국어를 기본으로 제공하며, Fedora용 RPM과 간편 설치를 우선 지원합니다.
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
-[![PySide6](https://img.shields.io/badge/PySide6-6.7+-41cd52.svg)](https://doc.qt.io/qtforpython-6/)
-[![Platform: Linux](https://img.shields.io/badge/platform-Linux-grey.svg)](#)
+## Fedora 설치
 
-## Why?
-
-[`AdGuard VPN`](https://github.com/AdguardTeam/AdGuardVPNCLI) for Linux is CLI-first. This project adds a native desktop GUI:
-tray icon, one-click connect, locations with ping, autostart, exclusions,
-kill switch, and settings UI.
-
-⚠️ Unofficial community project. Not affiliated with AdGuard Software Ltd.
-Requires the official adguardvpn-cli to be installed and authenticated.
-
-<p align="center">
-  <img src="assets/screenshots/home.png" alt="Home screen" width="820"/>
-</p>
-
-## Features
-
-- **One-click connect** — large circular Connect button with explicit
-  `disconnected / connecting / connected / disconnecting / error` states,
-  branded green glow when active.
-- **Locations list** with live ping, country flag-badge, fuzzy search by
-  country/city/ISO code, `All / Favorites` filter and per-row favorite
-  toggle. The active location shows a red **Disconnect** button; pending
-  rows get an amber pill with an iOS-style segmented spinner painted
-  directly inside the button — no clunky banners.
-- **Full coverage of CLI `config set-*`**: TUN/SOCKS mode, protocol
-  (auto/http2/quic), TUN routing, system DNS, post-quantum, SOCKS
-  host/port/auth, route script, update channel, telemetry, bound interface.
-- **Kill switch** powered by the CLI's built-in `--boot` flag — the daemon
-  reconnects indefinitely if the tunnel drops. No iptables, no sudo.
-- **Autostart** via the standard `~/.config/autostart/adguard-gui.desktop`
-  (works on GNOME / KDE / XFCE / Cinnamon).
-- **Auto-connect on launch** — `Off / Last location / Fastest`.
-- **System tray** with `Connect (fastest) / Disconnect / Open / Quit`;
-  the icon colour reflects connection state. Closing the window minimises
-  to tray.
-- **Site exclusions** — switch general/selective mode, add/remove domains
-  and CIDR ranges.
-- **Single instance** via `QLockFile` — a second launch surfaces the
-  existing window instead of starting a new process.
-- **6 languages**: English, Русский, Deutsch, Español, Français, 中文.
-  Switching is **live, no restart required**.
-- **Session duration** is read from the real tun-interface creation time
-  (`/sys/class/net/<iface>` mtime) — correct even if the CLI was already
-  connected before the GUI started.
-
-## Screenshots
-
-| Home | Locations |
-|---|---|
-| ![Home](assets/screenshots/home.png) | ![Locations](assets/screenshots/locations.png) |
-
-| Settings | Exclusions |
-|---|---|
-| ![Settings](assets/screenshots/settings.png) | ![Exclusions](assets/screenshots/exclusions.png) |
-
-| Account | About |
-|---|---|
-| ![Account](assets/screenshots/account.png) | ![About](assets/screenshots/about.png) |
-
-## Requirements
-
-- Linux with any Wayland/X11 desktop environment
-- [`adguardvpn-cli`](https://github.com/AdguardTeam/AdGuardVPNCLI) installed
-  and authenticated. The official installer sets `CAP_NET_ADMIN` on the
-  binary, so the GUI never needs sudo.
-- Python 3.10+
-- PySide6 (Qt 6)
-
-## Installation
-
-The project ships native packaging for every major Linux family plus
-universal formats (AppImage, Flatpak, Snap).
-
-| Distribution                            | Package manager     | Command                                  |
-|-----------------------------------------|---------------------|------------------------------------------|
-| Debian, Ubuntu, Mint, Pop!_OS, Elementary | `apt` / `dpkg`     | `make deb && sudo apt install ./build/*.deb` |
-| Fedora, RHEL, CentOS Stream, Alma, Rocky | `dnf` / `yum`       | `make rpm && sudo dnf install ./build/rpm/RPMS/noarch/*.rpm` |
-| openSUSE, SLE                            | `zypper`            | `make rpm && sudo zypper install ./build/rpm/RPMS/noarch/*.rpm` |
-| Arch, Manjaro, EndeavourOS               | `pacman` / `makepkg` | `make arch && sudo pacman -U build/*.pkg.tar.*` |
-| Alpine                                   | `apk` / `abuild`    | `make alpine`                            |
-| Void Linux                               | `xbps` / `xbps-src` | `make void` (see hint)                   |
-| Gentoo                                   | `emerge` / ebuild   | `make gentoo` (drop into overlay)        |
-| NixOS / Nix                              | `nix`               | `make nix` → `nix profile install ./packaging/nix#default` |
-| Any distro (universal)                   | Flatpak             | `make flatpak && flatpak install ./build/*.flatpak` |
-| Any distro (universal)                   | Snap                | `make snap && sudo snap install --dangerous ./build/*.snap` |
-| Any distro (universal)                   | AppImage            | `make appimage && ./build/*.AppImage`    |
-
-All build targets live in the root `Makefile`; per-distribution meta lives
-under [`packaging/`](packaging/). See [`packaging/README.md`](packaging/README.md)
-for prerequisites and CI tips.
-
-### Manual install from sources
+[릴리스 다운로드](https://github.com/nu4ddi4/adguardvpn-gui/releases/tag/v0.3.0)에서
+`install-fedora.sh`를 내려받은 뒤 해당 폴더에서 실행하세요.
 
 ```bash
-sudo make install                    # into /usr
-sudo make install PREFIX=/usr/local  # or any prefix you like
+bash install-fedora.sh
 ```
 
-`make uninstall` removes everything that `make install` placed.
+또는 터미널에 다음 한 줄을 입력하세요.
 
-### Run from the repository (development)
+```bash
+curl --fail --show-error --location --proto '=https' --proto-redir '=https' https://github.com/nu4ddi4/adguardvpn-gui/releases/download/v0.3.0/install-fedora.sh -o install-fedora.sh && bash install-fedora.sh
+```
+
+설치 스크립트는 RPM의 SHA-256을 확인하고 DNF로 앱과 의존성을 설치합니다.
+공식 VPN CLI가 없으면 AdGuard의 설치 프로그램을 실행합니다.
+일반 사용자로 실행하며, 관리자 권한이 필요한 단계에서만 비밀번호를 입력합니다.
+설치 후 앱 메뉴의 **AdGuard VPN → 계정**에서 직접 로그인하세요.
+
+- 대상: 일반 Fedora 데스크톱, x86_64·aarch64. Silverblue·Kinoite는 현재 설치 스크립트 대상이 아닙니다.
+- Qt 의존성은 Fedora 공식 저장소의 `python3-pyside6 >= 6.7`에서 설치합니다.
+- CLI가 이미 설치되어 있으면 다시 설치하지 않습니다.
+- RPM 파일은 CPU에 독립적인 `noarch`이며, 공식 CLI는 사용자의 CPU에 맞게 별도 설치됩니다.
+- 현재 버전은 사전 배포판입니다. 실제 Fedora 설치·로그인·VPN 연결 테스트는 아직 수행하지 않았습니다.
+
+더 자세한 방법과 삭제 안내는 [설치 안내](docs/설치-안내.md)를 참고하세요.
+
+### RPM만 직접 설치
+
+릴리스에서 `adguard-gui-fedora.noarch.rpm`을 내려받습니다.
+
+```bash
+sudo dnf install ./adguard-gui-fedora.noarch.rpm
+```
+
+공식 CLI가 없는 경우 간편 설치 스크립트를 사용하세요. RPM의 설치 후 처리에서는 외부 프로그램을 내려받거나 실행하지 않습니다.
+
+## 기능
+
+- VPN 연결·해제와 가장 빠른 서버 선택
+- 서버 검색·즐겨찾기·응답 시간 표시와 한국어 지명 검색
+- TUN·SOCKS, DNS, 프로토콜, 양자 내성 암호화 설정
+- 사이트 예외 목록 및 선택적 VPN 사용
+- 로그인·구독 정보, 로그 내보내기, 공식 CLI 업데이트 안내
+- 자동 시작·자동 연결, 알림 영역 메뉴
+- 한국어 기본 지원, 기존 6개 언어 유지, 실행 중 언어 변경
+
+**연결 끊김 시 자동 재연결**은 CLI의 `--boot` 옵션을 사용합니다.
+VPN이 끊긴 동안의 일반 인터넷 트래픽을 방화벽으로 차단하는 기능은 아닙니다.
+Fedora GNOME 기본 환경에는 알림 영역 아이콘이 없을 수 있어, 알림 영역이 없는 환경에서는 창을 닫으면 앱이 종료됩니다.
+
+## 한국어 설정
+
+새 설치와 언어 설정이 없는 기존 설정 파일은 한국어를 사용합니다.
+이미 저장된 언어는 **설정 → 앱 → 언어 → 한국어**에서 변경할 수 있습니다.
+서버 식별자·프로토콜명·외부 CLI의 진단 로그와 공식 설치 프로그램 안내는 원문을 유지합니다.
+지명 사전에 없는 새 서버는 원문으로 표시됩니다.
+
+## 소스에서 실행·빌드
+
+Python 3.10 이상과 PySide6 6.7 이상을 사용합니다.
 
 ```bash
 python3 -m venv .venv
@@ -114,95 +72,32 @@ python3 -m venv .venv
 .venv/bin/python main.py
 ```
 
-## Usage
-
-After installation a desktop entry appears in your application menu under
-*Network*; from a terminal just run `adguard-gui`. CLI flags:
-
-- `--minimized` — start hidden in tray (used by the autostart entry).
-
-GUI preferences live in `~/.config/adguard-gui/config.json`. VPN
-configuration itself lives in `adguardvpn-cli` and is exposed through the
-*Settings* page.
-
-## Project layout
-
-```
-adguard_gui/         — application (PySide6)
-  adapters/          — typed wrapper around adguardvpn-cli
-  models/            — dataclasses + AppState (QObject with signals)
-  parsers/           — text parsers (ANSI strip, status, license,
-                       locations, config show, exclusions)
-  services/          — CommandRunner, Poller, autostart manager
-  storage/           — config.json (GUI-only prefs)
-  ui/                — pages, widgets, tray, MainWindow, theme.py, i18n.py
-assets/
-  icons/             — master SVG + hicolor PNG set (16…512)
-  screenshots/       — README screenshots
-packaging/           — .desktop, debian/, rpm.spec, PKGBUILD
-scripts/             — generate_icons.py
-Makefile             — install / deb / rpm / icons / clean
-```
-
-## Architecture
-
-A single `AppState` QObject holds the entire visible VPN state (`status`,
-`license`, `locations`, `config`, `exclusions`) and emits signals when any
-slice changes. `CommandRunner` runs `CliAdapter` calls on `QThreadPool`,
-parses output and updates the state. UI pages subscribe to the signals
-they care about — no UI page ever shells out to the CLI directly.
-
-Changing the language rebuilds `MainWindow._build_ui()` and calls
-`TrayIcon._retranslate()` — the app is fully translatable without a
-restart.
-
-## Localization
-
-English strings are the canonical keys (`tr("Home")`). Translations live
-in `adguard_gui/i18n.py` as a `TRANSLATIONS[lang]` dict. Missing keys
-gracefully fall back to the English original.
-
-## Contributing
-
-Issues and pull requests are welcome. For a quick local check:
+Fedora에서 RPM을 빌드하려면 다음을 실행합니다. 빌드 과정에서 GUI를 실행하지 않습니다.
 
 ```bash
-.venv/bin/python -m compileall adguard_gui
-QT_QPA_PLATFORM=offscreen timeout 5 .venv/bin/python main.py
+sudo dnf install rpm-build make
+make rpm
 ```
 
-Adding a translation: drop a new `TRANSLATIONS["xx"]` block in
-`adguard_gui/i18n.py` and register the language tuple in `LANGUAGES`.
+결과: `build/rpm/RPMS/noarch/adguard-gui-0.3.0-1.noarch.rpm`.
+다른 배포판의 기존 패키징 파일은 유지하며, 이번 배포에서는 Fedora RPM을 우선 제공합니다.
 
-## Donations
+## 프로젝트 구조
 
-If this project saves you a few hours, consider sending a tip — any
-amount is appreciated, none is expected. Donations support development
-of the **GUI only** and are not connected to AdGuard Software Ltd.
+- `adguard_gui/`: PySide6 앱, CLI 어댑터, 상태·응답 분석
+- `adguard_gui/translations_ko.py`: 한국어 문구와 서버 지명
+- `packaging/rpm.spec`: Fedora RPM 정의
+- `scripts/install-fedora.sh`: Fedora 간편 설치
+- `.github/workflows/`: RPM 빌드 및 태그 기반 사전 릴리스 게시
 
-| Network                                 | Address |
-|-----------------------------------------|---------|
-| **Bitcoin** (BTC)                       | `1MDKLxvJLsA6hQyLVuXqrkv4kyDLTBmx3j` |
-| **Litecoin** (LTC)                      | `LaXeNja3Nr4VmhpRcjLMeobNRXQSnG9B9e` |
-| **Ethereum / ERC-20** (ETH, USDT, USDC) | `0x84ca271b0663d843540d2a09b607bd75d2079775` |
-| **USDT** — Tron (TRC-20)                | `THnsTAcMogowzPGt7ntxaMCMEn2tyz6c5S` |
-| **USDT** — TON                          | `UQDLQVv4ufx3Aj9uYsZqf1GtFTWmcddZRcnguRbEFNH3POty` |
-| **Solana** (SOL, SPL tokens)            | `HSNHbAsungs7tLYgh31kR27Pi42ac9Edn1cXDGkfYeXa` |
+설정은 `~/.config/adguard-gui/config.json`에 저장합니다.
+앱은 일반 사용자로 실행하며, VPN 기능은 별도로 설치된 공식 CLI가 처리합니다.
 
-Please double-check the address and network before sending — wrong-network
-transfers can be unrecoverable.
+## 저장소와 라이선스
 
-## License
+[원본 SpazzRabbit/adguardvpn-gui](https://github.com/SpazzRabbit/adguardvpn-gui)의 포크입니다.
+이 포크의 기본 브랜치는 `master`이며, 변경을 별도 작업 브랜치에서 개발하고 병합합니다.
+원본 프로젝트 기여는 별도 PR로 진행합니다.
 
-[MIT](LICENSE).
-
-## AI assistance
-
-AI tools were used during development.
-
-## Disclaimer
-
-This project is not affiliated with AdGuard Software Ltd. It is a
-community frontend that calls the official
-[`adguardvpn-cli`](https://github.com/AdguardTeam/AdGuardVPNCLI) and stores
-no credentials of its own.
+[MIT 라이선스](LICENSE)와 원본 저작권 표기를 유지합니다.
+AdGuard Software Ltd.와 제휴하지 않은 커뮤니티 프로젝트입니다.

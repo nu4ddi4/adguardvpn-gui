@@ -46,7 +46,7 @@ def enable() -> None:
         "[Desktop Entry]\n"
         "Type=Application\n"
         "Name=AdGuard VPN\n"
-        "Comment=AdGuard VPN desktop client\n"
+        "Comment=AdGuard VPN 데스크톱 앱\n"
         f"Exec={_launch_command()}\n"
         "Icon=adguard-gui\n"
         "Terminal=false\n"

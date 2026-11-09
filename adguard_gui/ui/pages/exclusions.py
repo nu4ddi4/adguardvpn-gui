@@ -7,13 +7,13 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QMessageBox,
     QPushButton,
     QScrollArea,
     QVBoxLayout,
     QWidget,
 )
 
+from adguard_gui.ui.dialogs import question
 from adguard_gui.i18n import tr
 from adguard_gui.models.state import AppState
 from adguard_gui.models.types import ExclusionsState
@@ -55,9 +55,9 @@ class ExclusionsPage(QWidget):
         mode_layout.addWidget(cap)
 
         chips_row = QHBoxLayout(); chips_row.setSpacing(8)
-        self.btn_general = QPushButton("General")
+        self.btn_general = QPushButton(tr("General"))
         self.btn_general.setCheckable(True); self.btn_general.setObjectName("Chip")
-        self.btn_selective = QPushButton("Selective")
+        self.btn_selective = QPushButton(tr("Selective"))
         self.btn_selective.setCheckable(True); self.btn_selective.setObjectName("Chip")
         g = QButtonGroup(self); g.setExclusive(True); g.addButton(self.btn_general); g.addButton(self.btn_selective)
         self.btn_general.clicked.connect(lambda: self._set_active_mode("general"))
@@ -143,14 +143,12 @@ class ExclusionsPage(QWidget):
         QTimer.singleShot(500, self.runner.exclusions_load)
 
     def _clear_current(self) -> None:
-        reply = QMessageBox.question(
+        confirmed = question(
             self,
             tr("Clear list"),
-            tr("Delete all entries from the {mode} list?", mode=self._view_mode.upper()),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
+            tr("Delete all entries from the {mode} list?", mode=tr(self._view_mode.title())),
         )
-        if reply == QMessageBox.StandardButton.Yes:
+        if confirmed:
             self.runner.exclusions_clear(self._view_mode)
             from PySide6.QtCore import QTimer
             QTimer.singleShot(500, self.runner.exclusions_load)
@@ -178,7 +176,7 @@ class ExclusionsPage(QWidget):
                 w.deleteLater()
 
         if not domains:
-            empty = QLabel(tr("{mode} list is empty", mode=self._view_mode.upper()))
+            empty = QLabel(tr("{mode} list is empty", mode=tr(self._view_mode.title())))
             empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
             empty.setStyleSheet(f"color: {TEXT_MUTED}; font-size: 13px; padding: 32px;")
             self.list_layout.insertWidget(0, empty)

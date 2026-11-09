@@ -4,7 +4,7 @@ from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
-from adguard_gui.i18n import tr
+from adguard_gui.i18n import place_name, tr
 from adguard_gui.models.types import Location
 from adguard_gui.theme import (
     ACCENT,
@@ -66,9 +66,9 @@ class LocationRow(QFrame):
         text_box = QVBoxLayout()
         text_box.setContentsMargins(0, 0, 0, 0)
         text_box.setSpacing(2)
-        self.city = QLabel(location.city)
+        self.city = QLabel(place_name(location.city))
         self.city.setStyleSheet(f"color: {TEXT}; font-size: 14px; font-weight: 600;")
-        self.country = QLabel(location.country)
+        self.country = QLabel(place_name(location.country))
         self.country.setStyleSheet(f"color: {TEXT_MUTED}; font-size: 12px;")
         text_box.addWidget(self.city)
         text_box.addWidget(self.country)

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
+import shutil
 from typing import Literal
 
 ConnectionState = Literal[
@@ -87,9 +89,15 @@ class ExclusionsState:
     selective: list[str] = field(default_factory=list)
 
 
+def _default_binary_path() -> str:
+    installed = shutil.which("adguardvpn-cli")
+    fallback = Path("/opt/adguardvpn_cli/adguardvpn-cli")
+    return installed or (str(fallback) if fallback.is_file() else "adguardvpn-cli")
+
+
 @dataclass(slots=True)
 class GuiPrefs:
-    binary_path: str = "adguardvpn-cli"
+    binary_path: str = field(default_factory=_default_binary_path)
     timeout_sec: int = 30
     refresh_interval_sec: int = 5
     minimize_to_tray: bool = True
@@ -97,7 +105,7 @@ class GuiPrefs:
     close_to_tray: bool = True
     favorite_locations: list[str] = field(default_factory=list)
     last_location: str | None = None
-    lang: str = "ru"
+    lang: str = "ko"
     kill_switch: bool = False
     autostart: bool = False
     autoconnect_mode: str = "off"  # off | last | fastest
