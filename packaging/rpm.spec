@@ -1,4 +1,4 @@
-%{!?app_version:%global app_version 0.3.0}
+%{!?app_version:%global app_version 0.3.1}
 
 Name:           adguard-gui
 Version:        %{app_version}
@@ -46,5 +46,5 @@ if ! command -v adguardvpn-cli >/dev/null 2>&1 && [ ! -x /opt/adguardvpn_cli/adg
 fi
 
 %changelog
-* Mon Nov 09 2026 AdGuard VPN GUI contributors - 0.3.0-1
+* Mon Nov 09 2026 AdGuard VPN GUI contributors - 0.3.1-1
 - 한국어 기본 지원과 Fedora RPM 소스 빌드·설치 경로 정리.

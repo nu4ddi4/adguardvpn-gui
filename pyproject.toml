@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "adguard-gui"
-version = "0.3.0"
+version = "0.3.1"
 description = "한국어를 기본 지원하는 비공식 AdGuard VPN 데스크톱 앱"
 readme = "README.md"
 requires-python = ">=3.10"

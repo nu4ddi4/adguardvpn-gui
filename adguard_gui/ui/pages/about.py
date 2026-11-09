@@ -23,7 +23,7 @@ from adguard_gui.theme import ACCENT, BG_ELEVATED, BORDER, TEXT, TEXT_DIM, TEXT_
 from adguard_gui.ui.widgets.section_header import PageHeader, SectionHeader
 
 
-GUI_VERSION = "0.3.0"
+GUI_VERSION = "0.3.1"
 
 
 class AboutPage(QWidget):
