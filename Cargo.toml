@@ -1,0 +1,20 @@
+[package]
+name = "adguard-gui"
+version = "0.3.0"
+edition = "2021"
+rust-version = "1.85"
+license = "MIT"
+description = "Unofficial AdGuard VPN client for Fedora GNOME"
+repository = "https://github.com/nu4ddi4/adguardvpn-gui"
+
+[dependencies]
+adw = { package = "libadwaita", version = "0.7", features = ["v1_4"] }
+gtk = { package = "gtk4", version = "0.9", features = ["v4_12"] }
+regex = "1.11"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"

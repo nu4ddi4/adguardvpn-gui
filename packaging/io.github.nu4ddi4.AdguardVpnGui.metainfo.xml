@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.nu4ddi4.AdguardVpnGui</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>AdGuard VPN GUI</name>
+  <summary>Unofficial AdGuard VPN client for GNOME</summary>
+  <description>
+    <p>Connect to AdGuard VPN using a native GNOME interface with searchable locations, favorites and optional tray integration.</p>
+    <p>The official adguardvpn-cli must be installed and authenticated separately. This project is not affiliated with AdGuard.</p>
+  </description>
+  <launchable type="desktop-id">io.github.nu4ddi4.AdguardVpnGui.desktop</launchable>
+  <url type="homepage">https://github.com/nu4ddi4/adguardvpn-gui</url>
+  <url type="bugtracker">https://github.com/nu4ddi4/adguardvpn-gui/issues</url>
+  <provides><binary>adguard-gui</binary></provides>
+  <releases><release version="0.3.0" date="2026-11-09"/></releases>
+</component>

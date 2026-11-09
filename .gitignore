@@ -44,3 +44,8 @@ _screenshot.py
 # User config (must never be committed)
 config.json
 *.log
+
+# Rust
+/target/
+/vendor/
+/.cargo/config.toml

@@ -2,12 +2,11 @@
 Type=Application
 Name=AdGuard VPN
 GenericName=VPN client
-Comment=AdGuard VPN desktop client
-Exec=adguard-gui %U
+Comment=Unofficial AdGuard VPN client for GNOME
+Exec=adguard-gui
 TryExec=adguard-gui
 Icon=adguard-gui
 Terminal=false
-Categories=Network;Security;Qt;
+Categories=Network;Security;GTK;
 Keywords=VPN;AdGuard;Privacy;Tunnel;
-StartupWMClass=adguard-gui
 StartupNotify=true
