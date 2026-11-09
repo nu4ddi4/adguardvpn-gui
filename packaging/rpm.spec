@@ -1,46 +1,50 @@
-Name:           adguard-gui
-Version:        0.2.0
-Release:        1%{?dist}
-Summary:        AdGuard VPN desktop client (GUI)
+%{!?app_version:%global app_version 0.3.0}
 
+Name:           adguard-gui
+Version:        %{app_version}
+Release:        1%{?dist}
+Summary:        한국어 AdGuard VPN 데스크톱 앱
 License:        MIT
-URL:            https://github.com/AdguardTeam
+URL:            https://github.com/nu4ddi4/adguardvpn-gui
+Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 
 Requires:       python3 >= 3.10
-Requires:       python3-pyside6
-Requires:       adguardvpn-cli
+Requires:       python3-pyside6 >= 6.7
+Requires:       hicolor-icon-theme
 
 %description
-Modern Qt-based GUI on top of adguardvpn-cli with location list, kill-switch,
-autostart and multi-language support.
+공식 adguardvpn-cli를 사용하는 비공식 Qt 데스크톱 앱입니다.
+한국어 기본 화면, 서버 선택, 예외 목록과 자동 시작을 지원합니다.
+공식 VPN CLI는 간편 설치 스크립트에서 별도로 설치합니다.
+
+%prep
+%setup -q
+
+%build
+# 순수 Python 앱과 SVG 아이콘이므로 GUI 실행이나 아이콘 변환이 필요 없습니다.
 
 %install
-mkdir -p %{buildroot}/usr/share/adguard-gui
-cp -r adguard_gui %{buildroot}/usr/share/adguard-gui/
-install -Dm755 packaging/adguard-gui %{buildroot}/usr/bin/adguard-gui
-install -Dm644 packaging/adguard-gui.desktop %{buildroot}/usr/share/applications/adguard-gui.desktop
-for size in 16 22 24 32 48 64 96 128 192 256 512; do
-    install -Dm644 assets/icons/hicolor/${size}x${size}/apps/adguard-gui.png \
-        %{buildroot}/usr/share/icons/hicolor/${size}x${size}/apps/adguard-gui.png
-done
+mkdir -p %{buildroot}%{_datadir}/adguard-gui
+cp -r adguard_gui %{buildroot}%{_datadir}/adguard-gui/
+install -Dm755 packaging/adguard-gui %{buildroot}%{_bindir}/adguard-gui
+install -Dm644 packaging/adguard-gui.desktop %{buildroot}%{_datadir}/applications/adguard-gui.desktop
 install -Dm644 assets/icons/adguard-gui.svg \
-    %{buildroot}/usr/share/icons/hicolor/scalable/apps/adguard-gui.svg
+    %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/adguard-gui.svg
 
 %files
-/usr/share/adguard-gui/
-/usr/bin/adguard-gui
-/usr/share/applications/adguard-gui.desktop
-/usr/share/icons/hicolor/*/apps/adguard-gui.*
+%license LICENSE
+%doc README.md
+%{_datadir}/adguard-gui/
+%{_bindir}/adguard-gui
+%{_datadir}/applications/adguard-gui.desktop
+%{_datadir}/icons/hicolor/scalable/apps/adguard-gui.svg
 
 %post
-gtk-update-icon-cache -q /usr/share/icons/hicolor &>/dev/null || :
-update-desktop-database -q /usr/share/applications &>/dev/null || :
-
-%postun
-gtk-update-icon-cache -q /usr/share/icons/hicolor &>/dev/null || :
-update-desktop-database -q /usr/share/applications &>/dev/null || :
+if ! command -v adguardvpn-cli >/dev/null 2>&1 && [ ! -x /opt/adguardvpn_cli/adguardvpn-cli ]; then
+    echo '공식 VPN CLI가 필요합니다. 릴리스의 install-fedora.sh를 일반 사용자로 실행하세요.'
+fi
 
 %changelog
-* Sun May 24 2026 AdGuard VPN GUI <noreply@example.com> - 0.2.0-1
-- Initial RPM packaging.
+* Mon Nov 09 2026 AdGuard VPN GUI contributors - 0.3.0-1
+- 한국어 기본 지원과 Fedora RPM 소스 빌드·설치 경로 정리.

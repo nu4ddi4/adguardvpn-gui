@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QHBoxLayout, QMainWindow, QStackedWidget, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QMainWindow, QStackedWidget, QSystemTrayIcon, QWidget
 
 from adguard_gui.adapters.cli_adapter import CliAdapter
 from adguard_gui.i18n import tr
@@ -126,7 +126,7 @@ class MainWindow(QMainWindow):
         self._force_close = value
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        if self._force_close or not self.state.prefs.close_to_tray:
+        if self._force_close or not self.state.prefs.close_to_tray or not QSystemTrayIcon.isSystemTrayAvailable():
             event.accept()
             from PySide6.QtWidgets import QApplication
             QApplication.instance().quit()

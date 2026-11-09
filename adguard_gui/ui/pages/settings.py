@@ -117,14 +117,16 @@ class SettingsPage(QWidget):
         layout.addWidget(_row(tr("Mode"), self.mode_combo, tr("TUN — system tunnel; SOCKS — local proxy.")))
 
         self.protocol_combo = QComboBox()
-        self.protocol_combo.addItems(["auto", "http2", "quic"])
-        self.protocol_combo.activated.connect(lambda _i: self._on_user("set-protocol", self.protocol_combo.currentText()))
+        for label, value in [(tr("Automatic"), "auto"), ("HTTP/2", "http2"), ("QUIC", "quic")]:
+            self.protocol_combo.addItem(label, value)
+        self.protocol_combo.activated.connect(lambda _i: self._on_user("set-protocol", self.protocol_combo.currentData()))
         layout.addWidget(_row(tr("Protocol"), self.protocol_combo))
 
         self.routing_combo = QComboBox()
-        self.routing_combo.addItems(["auto", "script", "none"])
-        self.routing_combo.activated.connect(lambda _i: self._on_user("set-tun-routing-mode", self.routing_combo.currentText()))
-        layout.addWidget(_row("TUN routing", self.routing_combo))
+        for label, value in [(tr("Automatic"), "auto"), (tr("Script"), "script"), (tr("None"), "none")]:
+            self.routing_combo.addItem(label, value)
+        self.routing_combo.activated.connect(lambda _i: self._on_user("set-tun-routing-mode", self.routing_combo.currentData()))
+        layout.addWidget(_row(tr("TUN routing"), self.routing_combo))
 
         self.system_dns_toggle = ToggleSwitch()
         self.system_dns_toggle.toggled.connect(lambda v: self._on_user("set-change-system-dns", "on" if v else "off"))
@@ -185,7 +187,7 @@ class SettingsPage(QWidget):
 
         self.dns_preset = QComboBox()
         for title, _ in DNS_PRESETS:
-            self.dns_preset.addItem(title)
+            self.dns_preset.addItem(tr(title))
         self.dns_preset.addItem(tr("Custom upstream"))
         self.dns_preset.activated.connect(self._on_dns_preset)
         layout.addWidget(_row(tr("Preset"), self.dns_preset))
@@ -197,7 +199,7 @@ class SettingsPage(QWidget):
         db_title.setStyleSheet("font-size: 13px; font-weight: 600;")
         db.addWidget(db_title)
         self.dns_input = QLineEdit()
-        self.dns_input.setPlaceholderText("https://example/dns-query или 1.1.1.1")
+        self.dns_input.setPlaceholderText(tr("https://example/dns-query or 1.1.1.1"))
         apply_dns = QPushButton(tr("Apply"))
         apply_dns.setObjectName("Primary")
         apply_dns.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -214,7 +216,7 @@ class SettingsPage(QWidget):
 
         self.socks_host = QLineEdit()
         self.socks_host.setFixedWidth(150)
-        apply_host = QPushButton("OK"); apply_host.setObjectName("Ghost"); apply_host.setFixedWidth(54)
+        apply_host = QPushButton(tr("OK")); apply_host.setObjectName("Ghost"); apply_host.setFixedWidth(54)
         apply_host.clicked.connect(lambda: self._on_user("set-socks-host", self.socks_host.text().strip() or "127.0.0.1"))
         host_wrap = QWidget()
         host_row = QHBoxLayout(host_wrap); host_row.setContentsMargins(0, 0, 0, 0); host_row.setSpacing(6)
@@ -224,7 +226,7 @@ class SettingsPage(QWidget):
         self.socks_port = QSpinBox()
         self.socks_port.setRange(1, 65535)
         self.socks_port.setFixedWidth(110)
-        apply_port = QPushButton("OK"); apply_port.setObjectName("Ghost"); apply_port.setFixedWidth(54)
+        apply_port = QPushButton(tr("OK")); apply_port.setObjectName("Ghost"); apply_port.setFixedWidth(54)
         apply_port.clicked.connect(lambda: self._on_user("set-socks-port", str(self.socks_port.value())))
         port_wrap = QWidget()
         port_row = QHBoxLayout(port_wrap); port_row.setContentsMargins(0, 0, 0, 0); port_row.setSpacing(6)
@@ -290,8 +292,9 @@ class SettingsPage(QWidget):
     def _build_updates_card(self) -> QFrame:
         card, layout = _card(tr("Updates"))
         self.channel_combo = QComboBox()
-        self.channel_combo.addItems(["release", "beta", "nightly"])
-        self.channel_combo.activated.connect(lambda _i: self._on_user("set-update-channel", self.channel_combo.currentText()))
+        for label, value in [(tr("Stable"), "release"), (tr("Beta"), "beta"), (tr("Nightly"), "nightly")]:
+            self.channel_combo.addItem(label, value)
+        self.channel_combo.activated.connect(lambda _i: self._on_user("set-update-channel", self.channel_combo.currentData()))
         layout.addWidget(_row(tr("Channel"), self.channel_combo))
 
         check_btn = QPushButton(tr("Check for updates"))
@@ -376,8 +379,8 @@ class SettingsPage(QWidget):
         self._syncing = True
         try:
             self.mode_combo.setCurrentText("TUN" if cfg.mode == "tun" else "SOCKS")
-            self.protocol_combo.setCurrentText(cfg.protocol or "auto")
-            self.routing_combo.setCurrentText(cfg.tun_routing_mode or "auto")
+            self.protocol_combo.setCurrentIndex(max(0, self.protocol_combo.findData(cfg.protocol or "auto")))
+            self.routing_combo.setCurrentIndex(max(0, self.routing_combo.findData(cfg.tun_routing_mode or "auto")))
             self.system_dns_toggle.setChecked(cfg.change_system_dns, animate=False)
             self.post_quantum_toggle.setChecked(cfg.post_quantum, animate=False)
             if cfg.dns_upstream:
@@ -401,7 +404,7 @@ class SettingsPage(QWidget):
             self.debug_toggle.setChecked(cfg.debug_logging, animate=False)
             self.notify_toggle.setChecked(cfg.show_notifications, animate=False)
             self.hints_toggle.setChecked(cfg.show_hints, animate=False)
-            self.channel_combo.setCurrentText(cfg.update_channel or "release")
+            self.channel_combo.setCurrentIndex(max(0, self.channel_combo.findData(cfg.update_channel or "release")))
             self.bound_if.setText(cfg.bound_if)
         finally:
             self._syncing = False
@@ -441,7 +444,7 @@ class SettingsPage(QWidget):
 
     def _save_binary(self) -> None:
         prefs = self.state.prefs
-        prefs.binary_path = self.binary_input.text().strip() or "adguardvpn-cli"
+        prefs.binary_path = self.binary_input.text().strip() or GuiPrefs().binary_path
         self.runner.adapter.set_prefs(prefs)
         self.store.save(prefs)
         self.state.set_prefs(prefs)

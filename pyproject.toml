@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "adguard-gui"
-version = "0.2.0"
-description = "Unofficial modern desktop GUI for adguardvpn-cli"
+version = "0.3.0"
+description = "한국어를 기본 지원하는 비공식 AdGuard VPN 데스크톱 앱"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
@@ -32,9 +32,9 @@ dependencies = [
 adguard-gui = "adguard_gui.app:run"
 
 [project.urls]
-Homepage = "https://github.com/<your-user>/adguard-gui"
-Issues   = "https://github.com/<your-user>/adguard-gui/issues"
-Source   = "https://github.com/<your-user>/adguard-gui"
+Homepage = "https://github.com/nu4ddi4/adguardvpn-gui"
+Issues   = "https://github.com/nu4ddi4/adguardvpn-gui/issues"
+Source   = "https://github.com/nu4ddi4/adguardvpn-gui"
 
 [tool.setuptools.packages.find]
 include = ["adguard_gui*"]

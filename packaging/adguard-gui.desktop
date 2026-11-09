@@ -1,13 +1,15 @@
 [Desktop Entry]
 Type=Application
 Name=AdGuard VPN
-GenericName=VPN client
-Comment=AdGuard VPN desktop client
+GenericName=VPN 클라이언트
+GenericName[ko]=VPN 클라이언트
+Comment=AdGuard VPN 데스크톱 앱
+Comment[ko]=AdGuard VPN 데스크톱 앱
 Exec=adguard-gui %U
 TryExec=adguard-gui
 Icon=adguard-gui
 Terminal=false
-Categories=Network;Security;Qt;
-Keywords=VPN;AdGuard;Privacy;Tunnel;
+Categories=Network;Qt;
+Keywords=VPN;AdGuard;Privacy;Tunnel;보안;개인정보;터널;
 StartupWMClass=adguard-gui
 StartupNotify=true
