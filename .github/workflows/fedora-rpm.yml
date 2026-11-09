@@ -35,7 +35,7 @@ jobs:
           cp build/rpm/RPMS/noarch/adguard-gui-*.noarch.rpm dist/adguard-gui-fedora.noarch.rpm
           cp scripts/install-fedora.sh dist/install-fedora.sh
           cp packaging/install-fedora.desktop dist/install-fedora.desktop
-          cp docs/설치-안내.md dist/설치-안내.md
+          cp docs/설치-안내.md dist/install-guide.ko.md
           cp build/rpm/SOURCES/adguard-gui-*.tar.gz dist/
           cd dist
           sha256sum *.rpm *.sh *.desktop *.md *.tar.gz > SHA256SUMS
