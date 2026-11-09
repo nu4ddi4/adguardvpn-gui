@@ -24,7 +24,7 @@ jobs:
     container: fedora:43
     steps:
       - name: GTK·Rust 빌드 도구 설치
-        run: dnf install -y git python3 make rpm-build cargo rust gcc gtk4-devel libadwaita-devel pkgconf-pkg-config desktop-file-utils tar gzip
+        run: dnf install -y git python3 make rpm-build cargo rust gcc gtk4-devel libadwaita-devel pkgconf-pkg-config desktop-file-utils tar gzip xorg-x11-server-Xvfb dbus-daemon
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.source_ref || github.ref }}
@@ -39,7 +39,14 @@ jobs:
             exit 1
           fi
           bash -n scripts/install-fedora.sh
-      - name: GTK RPM 빌드 (앱 실행 없음)
+      - name: GTK 화면·CLI 통합 및 단위 테스트
+        if: matrix.arch == 'x86_64'
+        env:
+          GSK_RENDERER: cairo
+          GDK_BACKEND: x11
+          GTK_A11Y: none
+        run: xvfb-run -a dbus-run-session -- cargo test --locked -- --test-threads=1
+      - name: GTK RPM 빌드
         run: make rpm
       - name: 배포 파일 준비
         shell: bash
@@ -51,6 +58,7 @@ jobs:
           if [[ "$PACKAGE_ARCH" == x86_64 ]]; then
             cp scripts/install-fedora.sh packaging/install-fedora.desktop dist/
             cp docs/설치-안내.md dist/install-guide.ko.md
+            cp docs/검증-결과.md dist/validation.ko.md
             cp build/rpm/SOURCES/adguard-gui-*.tar.gz dist/
           fi
       - uses: actions/upload-artifact@v4

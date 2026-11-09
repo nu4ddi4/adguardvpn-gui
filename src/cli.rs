@@ -9,6 +9,7 @@ pub async fn run(binary: &str, args: &[String], timeout: u32) -> Result<String, 
     launcher.setenv("LANG", "C.UTF-8", true);
     launcher.setenv("LC_ALL", "C.UTF-8", true);
     launcher.setenv("NO_COLOR", "1", true);
+    launcher.setenv("LANGUAGE", "en", true);
     let mut command: Vec<&std::ffi::OsStr> = vec![binary.as_ref()];
     command.extend(args.iter().map(|arg| std::ffi::OsStr::new(arg)));
     let child = launcher.spawn(&command).map_err(|error| {
