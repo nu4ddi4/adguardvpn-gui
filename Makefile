@@ -22,7 +22,7 @@
 #   DESTDIR=        корень установки (для пакетной сборки)
 #   PREFIX=/usr     префикс установки
 
-VERSION ?= 0.3.0
+VERSION ?= 0.3.1
 DESTDIR ?=
 PREFIX  ?= /usr
 PY      ?= python3

@@ -5,7 +5,7 @@
 
 ## Fedora 설치
 
-[릴리스 다운로드](https://github.com/nu4ddi4/adguardvpn-gui/releases/tag/v0.3.0)에서
+[릴리스 다운로드](https://github.com/nu4ddi4/adguardvpn-gui/releases/tag/v0.3.1)에서
 `install-fedora.sh`를 내려받은 뒤 해당 폴더에서 실행하세요.
 
 ```bash
@@ -15,7 +15,7 @@ bash install-fedora.sh
 또는 터미널에 다음 한 줄을 입력하세요.
 
 ```bash
-curl --fail --show-error --location --proto '=https' --proto-redir '=https' https://github.com/nu4ddi4/adguardvpn-gui/releases/download/v0.3.0/install-fedora.sh -o install-fedora.sh && bash install-fedora.sh
+curl --fail --show-error --location --proto '=https' --proto-redir '=https' https://github.com/nu4ddi4/adguardvpn-gui/releases/download/v0.3.1/install-fedora.sh -o install-fedora.sh && bash install-fedora.sh
 ```
 
 설치 스크립트는 RPM의 SHA-256을 확인하고 DNF로 앱과 의존성을 설치합니다.
@@ -79,7 +79,7 @@ sudo dnf install rpm-build make
 make rpm
 ```
 
-결과: `build/rpm/RPMS/noarch/adguard-gui-0.3.0-1.noarch.rpm`.
+결과: `build/rpm/RPMS/noarch/adguard-gui-0.3.1-1.noarch.rpm`.
 다른 배포판의 기존 패키징 파일은 유지하며, 이번 배포에서는 Fedora RPM을 우선 제공합니다.
 
 ## 프로젝트 구조
