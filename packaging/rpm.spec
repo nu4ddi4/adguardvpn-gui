@@ -1,4 +1,4 @@
-%{!?app_version:%global app_version 0.4.0}
+%{!?app_version:%global app_version 0.5.0}
 %global debug_package %{nil}
 %global app_id io.github.nu4ddi4.AdguardVpnGui
 Name:           adguard-gui
@@ -18,10 +18,13 @@ BuildRequires:  pkgconfig(libadwaita-1) >= 1.8
 BuildRequires:  desktop-file-utils
 Requires:       gtk4 >= 4.20
 Requires:       libadwaita >= 1.8
+Requires:       /usr/bin/curl
+Requires:       /usr/bin/pkexec
+Requires:       /usr/bin/dnf
 Requires:       hicolor-icon-theme
 %description
 공식 adguardvpn-cli를 사용하는 Rust·GTK 4·libadwaita 데스크톱 앱입니다.
-한국어 화면, 서버 선택, 즐겨찾기, 구독 정보 조회와 터미널 로그인을 제공합니다.
+한국어 화면, 서버 선택, 구독 조회, 사이트 예외와 앱 자동 업데이트를 제공합니다.
 공식 CLI는 간편 설치 스크립트로 별도 설치합니다.
 %prep
 %autosetup -n %{name}-%{version}
@@ -42,5 +45,5 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/%{app_id}.desktop
 %{_datadir}/icons/hicolor/scalable/apps/adguard-gui.svg
 %{_datadir}/metainfo/%{app_id}.metainfo.xml
 %changelog
-* Mon Nov 09 2026 AdGuard VPN GUI contributors - 0.4.0-1
-- GTK 4·libadwaita 전환 및 구독 조회·진단 화면 추가.
+* Mon Nov 09 2026 AdGuard VPN GUI contributors - 0.5.0-1
+- 사이트 예외·선택 모드·앱 자동 업데이트 및 GTK 통합 테스트 추가.

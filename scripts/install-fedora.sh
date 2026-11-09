@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 readonly REPOSITORY='nu4ddi4/adguardvpn-gui'
-version='0.4.0'
+version='0.5.0'
 local_rpm=''
 install_cli=1
 
@@ -11,7 +11,7 @@ fail() { printf '오류: %s\n' "$*" >&2; exit 1; }
 usage() {
     cat <<'HELP'
 사용법: bash install-fedora.sh [옵션]
-  --version 버전    설치할 릴리스 버전 (기본값: 0.4.0)
+  --version 버전    설치할 릴리스 버전 (기본값: 0.5.0)
   --rpm 파일       내려받은 로컬 RPM 설치 (온라인 체크섬 확인 생략)
   --skip-cli       공식 VPN CLI 설치 생략
   --help           도움말 표시
@@ -27,7 +27,7 @@ while (($#)); do
         *) fail "알 수 없는 옵션: $1" ;;
     esac
 done
-[[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail '버전 형식은 0.4.0 또는 v0.4.0이어야 합니다.'
+[[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail '버전 형식은 0.5.0 또는 v0.5.0이어야 합니다.'
 [[ "$EUID" -ne 0 ]] || fail 'sudo를 붙이지 말고 일반 사용자로 실행하세요.'
 [[ -r /etc/os-release ]] || fail '운영체제 정보를 확인할 수 없습니다.'
 # shellcheck source=/dev/null

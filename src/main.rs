@@ -3,8 +3,10 @@ mod cli;
 mod model;
 mod places;
 mod preferences;
+mod sites;
 mod tray;
 mod ui;
+mod updater;
 
 use adw::prelude::*;
 use gtk::{gio, glib};
