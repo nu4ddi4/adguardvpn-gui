@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.nu4ddi4.AdguardVpnGui</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>AdGuard VPN GUI</name>
+  <summary>GNOME용 비공식 한국어 AdGuard VPN 앱</summary>
+  <description>
+    <p>GTK 4·libadwaita 화면에서 VPN 연결, 서버 검색, 즐겨찾기와 구독 정보를 관리합니다.</p>
+    <p>공식 CLI를 별도로 설치하고 터미널에서 로그인합니다. AdGuard와 제휴하지 않은 앱입니다.</p>
+  </description>
+  <launchable type="desktop-id">io.github.nu4ddi4.AdguardVpnGui.desktop</launchable>
+  <url type="homepage">https://github.com/nu4ddi4/adguardvpn-gui</url>
+  <url type="bugtracker">https://github.com/nu4ddi4/adguardvpn-gui/issues</url>
+  <provides><binary>adguard-gui</binary></provides>
+  <releases><release version="0.4.0" date="2026-11-09"/></releases>
+</component>

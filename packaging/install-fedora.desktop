@@ -3,7 +3,7 @@ Type=Application
 Name=AdGuard VPN 설치
 Name[ko]=AdGuard VPN 설치
 Comment=Fedora용 한국어 AdGuard VPN GUI 설치
-Exec=bash -c "set -o pipefail; if curl --fail --show-error --location --connect-timeout 15 --max-time 180 --proto '=https' --proto-redir '=https' 'https://github.com/nu4ddi4/adguardvpn-gui/releases/download/v0.3.1/install-fedora.sh' | bash; then echo '설치 절차가 완료되었습니다.'; else echo '설치에 실패했습니다. 위 오류를 확인하세요.'; fi; read -r -p '종료하려면 Enter 키를 누르세요.'"
+Exec=bash -c "set -o pipefail; if curl --fail --show-error --location --connect-timeout 15 --max-time 180 --proto '=https' --proto-redir '=https' 'https://github.com/nu4ddi4/adguardvpn-gui/releases/download/v0.4.0/install-fedora.sh' | bash; then echo '설치 절차가 완료되었습니다.'; else echo '설치에 실패했습니다. 위 오류를 확인하세요.'; fi; read -r -p '종료하려면 Enter 키를 누르세요.'"
 Icon=network-vpn
 Terminal=true
 Categories=Network;
