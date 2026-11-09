@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QIcon
-from PySide6.QtWidgets import QApplication, QMenu, QMessageBox, QSystemTrayIcon
+from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
-from adguard_gui.i18n import tr
+from adguard_gui.ui.dialogs import question
+from adguard_gui.i18n import place_name, tr
 from adguard_gui.models.state import AppState
 from adguard_gui.models.types import ConnectionStatus
 from adguard_gui.services.command_runner import CommandRunner
@@ -78,7 +79,7 @@ class TrayIcon(QSystemTrayIcon):
             "unknown": tr("VPN: …"),
         }.get(status.state, tr("VPN: …"))
         if status.state == "connected" and status.location_city:
-            label += f"  •  {status.location_city.title() if status.location_city.isupper() else status.location_city}"
+            label += f"  •  {place_name(status.location_city)}"
         self.status_action.setText(label)
         self.disconnect_action.setEnabled(status.state == "connected")
         self.connect_last_action.setEnabled(status.state in ("disconnected", "error", "unknown"))
@@ -96,14 +97,12 @@ class TrayIcon(QSystemTrayIcon):
         self.window.activateWindow()
 
     def _confirm_disconnect(self) -> None:
-        reply = QMessageBox.question(
+        confirmed = question(
             self.window,
             tr("Disconnect VPN"),
             tr("Disconnect from AdGuard VPN?"),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
         )
-        if reply == QMessageBox.StandardButton.Yes:
+        if confirmed:
             self.runner.disconnect()
 
     def _quit(self) -> None:

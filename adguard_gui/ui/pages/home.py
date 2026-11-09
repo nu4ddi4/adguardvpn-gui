@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from adguard_gui.i18n import tr
+from adguard_gui.i18n import place_name, tr
 from adguard_gui.models.state import AppState
 from adguard_gui.models.types import ConnectionStatus, UpdateInfo
 from adguard_gui.services.command_runner import CommandRunner
@@ -178,6 +178,8 @@ class HomePage(QWidget):
                 iso = mapped.iso
                 city = mapped.city
                 country = mapped.country
+            city = place_name(city)
+            country = place_name(country)
             label = f"{iso}  •  {city}" if iso else city
             if country:
                 label = f"{label} ({country})"

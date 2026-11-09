@@ -7,12 +7,12 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QMessageBox,
     QPushButton,
     QVBoxLayout,
     QWidget,
 )
 
+from adguard_gui.ui.dialogs import notice, question
 from adguard_gui.i18n import tr
 from adguard_gui.models.state import AppState
 from adguard_gui.models.types import LicenseInfo
@@ -142,7 +142,7 @@ class AccountPage(QWidget):
             self.login_card.setVisible(False)
             self.account_email.setText(info.email or "—")
             tier = info.tier or "FREE"
-            self.tier_badge.setText(tier)
+            self.tier_badge.setText(tr(tier))
             if tier == "PREMIUM":
                 self.tier_badge.setStyleSheet(
                     f"background-color: {ACCENT_SOFT}; color: {ACCENT}; padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 700;"
@@ -158,14 +158,12 @@ class AccountPage(QWidget):
             self.login_card.setVisible(True)
 
     def _logout(self) -> None:
-        reply = QMessageBox.question(
+        confirmed = question(
             self,
             tr("Confirmation"),
             tr("Sign out of AdGuard VPN? VPN will be disconnected."),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
         )
-        if reply == QMessageBox.StandardButton.Yes:
+        if confirmed:
             self.runner.logout()
             from PySide6.QtCore import QTimer
             QTimer.singleShot(600, self.runner.license)
@@ -175,7 +173,7 @@ class AccountPage(QWidget):
         email = self.login_email.text().strip()
         pwd = self.login_password.text()
         if not email or not pwd:
-            QMessageBox.warning(self, tr("Sign in"), tr("Enter email and password."))
+            notice(self, tr("Sign in"), tr("Enter email and password."), warning=True)
             return
         self.runner.login(email, pwd)
         from PySide6.QtCore import QTimer

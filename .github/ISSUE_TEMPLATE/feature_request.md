@@ -1,22 +1,18 @@
 ---
-name: Feature request
-about: Suggest an idea for this project
-title: "[feature] "
+name: 기능 제안
+about: 추가하거나 개선할 기능을 제안해주세요
+title: "[제안] "
 labels: enhancement
 ---
 
-## Summary
+## 제안하는 기능
 
-A clear and concise description of the feature you'd like.
+원하시는 동작을 간단히 적어주세요.
 
-## Motivation
+## 필요한 이유
 
-Why is this useful? What problem does it solve?
+어떤 상황에서 어떤 문제를 해결하나요?
 
-## Suggested implementation
+## 구현 아이디어 또는 대안
 
-Optional sketch of how it could work.
-
-## Alternatives considered
-
-Anything you've thought about and ruled out.
+있다면 적어주세요.

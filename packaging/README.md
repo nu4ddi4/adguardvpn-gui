@@ -1,146 +1,23 @@
-# Building distribution packages
+# 패키지 빌드
 
-All build entry points are defined in the top-level [`Makefile`](../Makefile).
-Per-distribution recipes live in this directory.
-
-Run `make help` for the short list.
-
-```
-icons | install | uninstall
-deb | rpm | arch | alpine | void | gentoo | nix | flatpak | snap | appimage
-```
-
-## Native packages
-
-### Debian family (`apt`)
-
-Distributions: Debian, Ubuntu, Linux Mint, Pop!_OS, Elementary, Kali, MX Linux…
+이번 배포에서는 Fedora용 RPM을 우선 제공합니다.
 
 ```bash
-make deb
-sudo apt install ./build/adguard-gui_0.2.0_all.deb
-```
-
-Inputs: `packaging/debian/control`, `postinst`, `postrm`.
-Tools required: `dpkg-deb`, `rsync`.
-
-### Red Hat family (`dnf` / `yum` / `zypper`)
-
-Distributions: Fedora, RHEL, CentOS Stream, AlmaLinux, Rocky, openSUSE.
-
-```bash
+sudo dnf install rpm-build make
 make rpm
-sudo dnf  install ./build/rpm/RPMS/noarch/*.rpm   # Fedora / RHEL / Rocky
-sudo zypper install ./build/rpm/RPMS/noarch/*.rpm  # openSUSE
 ```
 
-Inputs: `packaging/rpm.spec`. Tools required: `rpmbuild`.
+`build/rpm/RPMS/noarch/adguard-gui-0.3.0-1.noarch.rpm`에 생성됩니다.
+버전을 지정하려면 `make rpm VERSION=0.3.0`을 사용하세요.
+소스 압축 파일은 `build/rpm/SOURCES/`에 보관되며 LICENSE와 README를 포함합니다.
+빌드에 PySide6나 GUI 실행이 필요하지 않습니다. 설치 시 DNF가 PySide6를 해결합니다.
+공식 CLI는 RPM 필수 의존성으로 지정하지 않고 별도 간편 설치에서 처리합니다.
 
-### Arch family (`pacman` / `makepkg`)
+태그 `v0.3.0`을 게시하면 GitHub Actions가 Fedora 43 환경에서 빌드하고,
+RPM·설치 스크립트·실행 아이콘·설치 안내·소스 압축 파일·SHA-256 목록을 사전 릴리스에 첨부합니다.
+릴리스 태그와 `pyproject.toml`의 버전은 일치해야 하며, 해당 버전의 `docs/releases/` 안내가 필요합니다.
+실행·VPN 연결 테스트는 자동으로 수행하지 않습니다.
 
-Distributions: Arch Linux, Manjaro, EndeavourOS, Garuda.
-
-```bash
-make arch
-sudo pacman -U build/adguard-gui-0.2.0-1-any.pkg.tar.zst
-```
-
-Inputs: `packaging/PKGBUILD`. Tools required: `makepkg`, `fakeroot`.
-
-### Alpine (`apk` / `abuild`)
-
-```bash
-make alpine
-```
-
-Inputs: `packaging/alpine/APKBUILD`. Tools required: `abuild`.
-
-### Void Linux (`xbps`)
-
-```bash
-make void
-# follow the printed instructions: drop packaging/void/template into
-# srcpkgs/adguard-gui/ inside your void-packages checkout and run
-#   ./xbps-src pkg adguard-gui
-```
-
-Inputs: `packaging/void/template`. Tools required: `xbps-src`.
-
-### Gentoo (`emerge` / ebuild)
-
-```bash
-make gentoo
-# copy packaging/gentoo/adguard-gui-0.2.0.ebuild into your overlay
-# under net-vpn/adguard-gui/ and run:
-sudo ebuild adguard-gui-0.2.0.ebuild manifest
-sudo emerge -av adguard-gui
-```
-
-Inputs: `packaging/gentoo/adguard-gui-0.2.0.ebuild`.
-
-### NixOS / Nix
-
-```bash
-make nix
-# or with a flake-aware nix:
-nix build ./packaging/nix#default
-./packaging/nix/result/bin/adguard-gui
-```
-
-Inputs: `packaging/nix/default.nix`, `packaging/nix/flake.nix`. Tools
-required: `nix` (>=2.18 for flakes).
-
-## Universal packages
-
-### Flatpak
-
-```bash
-make flatpak
-flatpak install --user ./build/adguard-gui-0.2.0.flatpak
-```
-
-The Flatpak runs sandboxed with `org.kde.Platform//6.7` and dials out to
-`adguardvpn-cli` on the host through `--filesystem=host-os:ro` +
-`--talk-name=org.freedesktop.Flatpak`. The CLI must already be installed
-on the host system.
-
-Inputs: `packaging/flatpak/com.adguard.VpnGui.yaml`. Tools required:
-`flatpak-builder`.
-
-### Snap
-
-```bash
-make snap
-sudo snap install --dangerous ./build/adguard-gui_0.2.0_amd64.snap
-```
-
-Inputs: `packaging/snap/snapcraft.yaml`. Tools required: `snapcraft`
-(install with `sudo snap install snapcraft --classic`).
-
-### AppImage
-
-```bash
-make appimage
-./build/adguard-gui-0.2.0-x86_64.AppImage
-```
-
-The script in `packaging/appimage/build.sh` automatically downloads
-`linuxdeploy` and `linuxdeploy-plugin-python`, runs `make install` into an
-`AppDir`, and packs the result. Tools required: `bash`, `curl`,
-`fakeroot`.
-
-## Local install without a package manager
-
-```bash
-sudo make install                    # → /usr
-sudo make install PREFIX=/usr/local  # custom prefix
-```
-
-`make uninstall` reverses it.
-
-## Icons
-
-`make icons` regenerates the hicolor PNG set under
-`assets/icons/hicolor/<size>x<size>/apps/` from the master SVG at
-`assets/icons/adguard-gui.svg`. No external converter is needed —
-the script uses `QSvgRenderer`.
+기존 Debian·Arch·Nix 패키징 파일과 Makefile 진입점은 유지합니다.
+없는 빌드 파일을 참조하는 기존 AppImage·Flatpak·Snap 등의 목표는 현재 배포 지원을 의미하지 않습니다.
+사용자 설치는 [한국어 설치 안내](../docs/설치-안내.md)를 참고하세요.

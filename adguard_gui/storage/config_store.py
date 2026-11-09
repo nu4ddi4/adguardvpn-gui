@@ -13,22 +13,19 @@ class ConfigStore:
 
     def load(self) -> GuiPrefs:
         if not self.config_path.exists():
-            # Первый запуск — подбираем язык под систему. Импорт локальный,
-            # чтобы избежать кругового импорта на этапе старта приложения.
-            from adguard_gui.i18n import detect_system_lang
-            return GuiPrefs(lang=detect_system_lang())
+            return GuiPrefs()
         try:
             data = json.loads(self.config_path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
-            from adguard_gui.i18n import detect_system_lang
-            return GuiPrefs(lang=detect_system_lang())
+            return GuiPrefs()
+        if not isinstance(data, dict):
+            return GuiPrefs()
         defaults = asdict(GuiPrefs())
         merged = {**defaults, **{k: v for k, v in data.items() if k in defaults}}
         try:
             return GuiPrefs(**merged)
         except TypeError:
-            from adguard_gui.i18n import detect_system_lang
-            return GuiPrefs(lang=detect_system_lang())
+            return GuiPrefs()
 
     def save(self, prefs: GuiPrefs) -> None:
         self.config_path.parent.mkdir(parents=True, exist_ok=True)

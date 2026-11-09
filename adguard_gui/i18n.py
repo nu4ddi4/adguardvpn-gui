@@ -5,7 +5,10 @@ itself, so English remains a no-op and missing translations degrade gracefully.
 """
 from __future__ import annotations
 
+from adguard_gui.translations_ko import KOREAN, PLACES
+
 LANGUAGES: list[tuple[str, str]] = [
+    ("ko", "한국어"),
     ("en", "English"),
     ("ru", "Русский"),
     ("de", "Deutsch"),
@@ -14,11 +17,12 @@ LANGUAGES: list[tuple[str, str]] = [
     ("zh", "中文"),
 ]
 
-_DEFAULT_LANG = "en"
+_DEFAULT_LANG = "ko"
 _current_lang = _DEFAULT_LANG
 
 
 TRANSLATIONS: dict[str, dict[str, str]] = {
+    "ko": KOREAN,
     "ru": {
         # Brand / nav
         "desktop client": "десктопный клиент",
@@ -567,7 +571,7 @@ def detect_system_lang() -> str:
 
 
 def tr(key: str, **kwargs) -> str:
-    if _current_lang == _DEFAULT_LANG:
+    if _current_lang == "en":
         text = key
     else:
         text = TRANSLATIONS.get(_current_lang, {}).get(key, key)
@@ -577,3 +581,10 @@ def tr(key: str, **kwargs) -> str:
         except (KeyError, IndexError):
             return text
     return text
+
+
+def place_name(value: str) -> str:
+    """서버 식별자는 유지하고 화면에 표시할 지명만 번역합니다."""
+    if _current_lang == "ko":
+        return PLACES.get(value.casefold(), value)
+    return value

@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from adguard_gui.i18n import tr
+from adguard_gui.i18n import place_name, tr
 from adguard_gui.models.state import AppState
 from adguard_gui.models.types import Location
 from adguard_gui.services.command_runner import CommandRunner
@@ -153,7 +153,9 @@ class LocationsPage(QWidget):
         if not self._filter_text:
             return True
         q = self._filter_text
-        return q in loc.country.lower() or q in loc.city.lower() or q in loc.iso.lower()
+        return any(q in value.lower() for value in (
+            loc.country, loc.city, loc.iso, place_name(loc.country), place_name(loc.city),
+        ))
 
     def _render(self, locations: list[Location]) -> None:
         # clear existing rows (keep stretch at end)

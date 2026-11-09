@@ -83,7 +83,7 @@ class StatusCard(QFrame):
                 self._started_at = time.time()
             self._fields["mode"].setText(status.mode or "—")
             self._fields["iface"].setText(iface or "—")
-            self._fields["protocol"].setText((protocol or "auto").upper())
+            self._fields["protocol"].setText(tr("Automatic") if not protocol or protocol == "auto" else protocol.upper())
             if not self._timer.isActive():
                 self._timer.start()
             self._tick_duration()

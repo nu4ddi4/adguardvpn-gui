@@ -22,7 +22,7 @@
 #   DESTDIR=        корень установки (для пакетной сборки)
 #   PREFIX=/usr     префикс установки
 
-VERSION ?= 0.2.0
+VERSION ?= 0.3.0
 DESTDIR ?=
 PREFIX  ?= /usr
 PY      ?= python3
@@ -39,7 +39,7 @@ all: deb
 
 help:
 	@echo "make icons | install | uninstall"
-	@echo "Packages: deb | rpm | arch | alpine | void | gentoo | nix | flatpak | snap | appimage"
+	@echo "패키지: rpm (Fedora 우선) | deb | arch | nix 등 기존 목표"
 
 icons:
 	$(PY) scripts/generate_icons.py
@@ -85,18 +85,22 @@ deb: icons
 	@echo
 	@echo "OK: $(DEB)"
 
-rpm: icons
-	@command -v rpmbuild >/dev/null || { echo "rpmbuild not found"; exit 1; }
+rpm:
+	@command -v rpmbuild >/dev/null || { echo "rpmbuild가 없습니다. Fedora에서 sudo dnf install rpm-build make를 실행하세요."; exit 1; }
 	mkdir -p "$(BUILDDIR)/rpm/BUILD" "$(BUILDDIR)/rpm/RPMS" "$(BUILDDIR)/rpm/SOURCES" "$(BUILDDIR)/rpm/SPECS"
 	tar -czf "$(BUILDDIR)/rpm/SOURCES/adguard-gui-$(VERSION).tar.gz" \
+		--exclude='__pycache__' --exclude='*.pyc' --exclude='*.pyo' \
 		--transform "s,^,adguard-gui-$(VERSION)/," \
-		adguard_gui packaging assets scripts
+		adguard_gui packaging scripts docs .github \
+		assets/icons/adguard-gui.svg LICENSE README.md CHANGELOG.md \
+		Makefile pyproject.toml requirements.txt main.py
 	cp packaging/rpm.spec "$(BUILDDIR)/rpm/SPECS/adguard-gui.spec"
 	rpmbuild --define "_topdir $(BUILDDIR)/rpm" \
-	         --define "version $(VERSION)" \
+	         --define "app_version $(VERSION)" \
+	         --define 'dist %{nil}' \
 	         -bb "$(BUILDDIR)/rpm/SPECS/adguard-gui.spec"
 	@echo
-	@echo "OK: $(BUILDDIR)/rpm/RPMS/noarch/"
+	@echo "RPM 생성 완료: $(BUILDDIR)/rpm/RPMS/noarch/"
 
 arch:
 	@command -v makepkg >/dev/null || { echo "makepkg not found (run on Arch / Manjaro)"; exit 1; }

@@ -5,7 +5,7 @@ import sys
 import tempfile
 
 from PySide6.QtCore import QLockFile, QTimer
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QApplication, QSystemTrayIcon
 
 from adguard_gui.adapters.cli_adapter import CliAdapter
 from adguard_gui.i18n import set_lang, tr
@@ -15,6 +15,7 @@ from adguard_gui.services.command_runner import CommandRunner
 from adguard_gui.services.poller import Poller
 from adguard_gui.storage.config_store import ConfigStore
 from adguard_gui.theme import app_icon, apply_theme
+from adguard_gui.ui.dialogs import notice
 from adguard_gui.ui.main_window import MainWindow
 from adguard_gui.ui.tray import TrayIcon
 
@@ -32,10 +33,14 @@ def run() -> int:
     qt_app.setWindowIcon(app_icon(128))
     apply_theme(qt_app)
 
+    store = ConfigStore()
+    prefs = store.load()
+    set_lang(prefs.lang)
+
     lock = QLockFile(_lock_path())
     lock.setStaleLockTime(0)
     if not lock.tryLock(50):
-        QMessageBox.information(
+        notice(
             None,
             "AdGuard VPN",
             tr("The application is already running. Open it from the system tray."),
@@ -44,9 +49,6 @@ def run() -> int:
     # keep reference for lifetime of process
     qt_app._adguard_lock = lock  # type: ignore[attr-defined]
 
-    store = ConfigStore()
-    prefs = store.load()
-    set_lang(prefs.lang)
     # Привести системный autostart к тому, что записано в prefs.
     try:
         autostart_sync(prefs.autostart)
@@ -60,7 +62,9 @@ def run() -> int:
 
     window = MainWindow(state, adapter, runner, store, poller)
     tray = TrayIcon(state, runner, window)
-    tray.show()
+    tray_available = QSystemTrayIcon.isSystemTrayAvailable()
+    if tray_available:
+        tray.show()
 
     # Initial data load
     QTimer.singleShot(0, runner.list_locations)
@@ -117,7 +121,7 @@ def run() -> int:
     poller.start()
 
     # CLI-флаг --minimized (используется autostart-записью) либо prefs.start_minimized
-    start_hidden = prefs.start_minimized or "--minimized" in sys.argv
+    start_hidden = tray_available and (prefs.start_minimized or "--minimized" in sys.argv)
     if not start_hidden:
         window.show()
 
