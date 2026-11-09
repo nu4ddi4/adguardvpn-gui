@@ -7,7 +7,7 @@ on:
       tag:
         description: 다시 게시할 기존 릴리스 태그
         required: true
-        default: v0.3.1
+        default: v0.4.0
         type: string
 permissions:
   contents: read
@@ -28,8 +28,12 @@ jobs:
           ref: ${{ inputs.tag || github.ref }}
       - uses: actions/download-artifact@v4
         with:
-          name: fedora-rpm
+          pattern: fedora-rpm-*
+          merge-multiple: true
           path: dist
+      - name: 배포 파일 체크섬 생성
+        working-directory: dist
+        run: sha256sum *.rpm *.sh *.desktop *.md *.tar.gz > SHA256SUMS
       - name: 릴리스 안내 확인
         shell: bash
         env:
