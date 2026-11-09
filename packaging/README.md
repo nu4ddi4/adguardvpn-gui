@@ -6,4 +6,4 @@ RPM 빌드 자체는 `cargo build --release --frozen`으로 네트워크 없이 
 
 GitHub Actions는 Fedora 43에서 x86_64·aarch64를 각각 빌드하고,
 릴리스에 RPM 두 개·설치 스크립트·설치 아이콘·한국어 안내·소스·체크섬을 첨부합니다.
-앱 실행 테스트는 수행하지 않습니다. 예전 Debian·Nix·Arch 파일은 이전 Python 구현의 참고 자료입니다.
+x86_64 빌드에서 가상 화면으로 GTK·외부 CLI 통합 테스트를 실행합니다. 공개 릴리스 네트워크 테스트는 별도 실행합니다. 예전 Debian·Nix·Arch 파일은 이전 Python 구현의 참고 자료입니다.
