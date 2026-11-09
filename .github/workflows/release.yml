@@ -1,71 +1,31 @@
-name: release
-
+# Publication is an explicit maintainer action, after Fedora acceptance testing.
+name: Publish Fedora release
 on:
-  push:
-    tags:
-      - "v*"
   workflow_dispatch:
-
+    inputs:
+      tag:
+        description: Existing release tag (for example v0.3.0)
+        required: true
+        type: string
 permissions:
   contents: write
-
 jobs:
   release:
-    name: Build & publish artefacts
     runs-on: ubuntu-latest
+    container: fedora:latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
       - name: Install build dependencies
-        run: |
-          sudo apt-get update -y
-          # Сборочные тулзы + Qt runtime — PySide6 при импорте дёргает
-          # libEGL/libGL даже в offscreen-режиме, иначе scripts/generate_icons.py
-          # падает с ImportError на CI-раннере.
-          sudo apt-get install -y --no-install-recommends \
-            dpkg rsync rpm \
-            libegl1 libgl1 libxkbcommon0 libxcb-cursor0 libdbus-1-3 \
-            libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
-            libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 \
-            libfontconfig1
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Resolve version
-        id: ver
-        run: |
-          ref="${GITHUB_REF##*/}"
-          ver="${ref#v}"
-          if [ -z "$ver" ] || [ "$ver" = "$ref" ]; then
-            ver=$(grep -oP '^version\s*=\s*"\K[^"]+' pyproject.toml | head -1)
-          fi
-          echo "version=$ver" >> "$GITHUB_OUTPUT"
-
-      - name: Build .deb
-        env:
-          QT_QPA_PLATFORM: offscreen
-        run: make deb VERSION=${{ steps.ver.outputs.version }}
-
-      - name: Build .rpm
-        env:
-          QT_QPA_PLATFORM: offscreen
-        run: make rpm VERSION=${{ steps.ver.outputs.version }} || true
-
-      - name: Collect artefacts
-        run: |
-          mkdir -p dist
-          cp build/*.deb dist/ || true
-          find build/rpm/RPMS -type f -name '*.rpm' -exec cp {} dist/ \; || true
-          ls -la dist/
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        run: dnf install -y git gcc cargo rust make gtk4-devel libadwaita-devel desktop-file-utils rpm-build
+      - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.tag }}
+      - name: Build offline RPM and SRPM
+        run: make rpm
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          draft: true
           generate_release_notes: true
           files: |
-            dist/*.deb
-            dist/*.rpm
+            build/rpm/RPMS/**/*.rpm
+            build/rpm/SRPMS/*.rpm

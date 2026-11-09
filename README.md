@@ -1,208 +1,120 @@
-# AdGuard VPN GUI
+# AdGuard VPN GUI — Fedora GNOME
 
-> Unofficial modern desktop GUI for the official [`adguardvpn-cli`](https://github.com/AdguardTeam/AdGuardVPNCLI) on Linux.
+Unofficial desktop frontend for the separately installed official
+[AdGuard VPN CLI](https://github.com/AdguardTeam/AdGuardVPNCLI).
+Version 0.3.0 replaces the Qt application with **Rust + GTK4/libadwaita**.
+Not affiliated with AdGuard. This repository retains the MIT license and history.
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
-[![PySide6](https://img.shields.io/badge/PySide6-6.7+-41cd52.svg)](https://doc.qt.io/qtforpython-6/)
-[![Platform: Linux](https://img.shields.io/badge/platform-Linux-grey.svg)](#)
+## First-version features
 
-## Why?
+- Connect fastest, select a location, disconnect, and read actual CLI status.
+- Search locations by country, city or ISO code; save per-city favorites.
+- Read account/subscription information; change protocol and DNS upstream.
+- Login autostart and optional auto-connect to the last or fastest location.
+- Optional tray integration using StatusNotifierItem and DBusMenu over Gio D-Bus.
+- Follow GNOME's system appearance; use a single application instance.
 
-[`AdGuard VPN`](https://github.com/AdguardTeam/AdGuardVPNCLI) for Linux is CLI-first. This project adds a native desktop GUI:
-tray icon, one-click connect, locations with ping, autostart, exclusions,
-kill switch, and settings UI.
+The GUI neither installs the VPN CLI nor changes its capabilities or privileges.
+Install and authenticate it using the
+[official instructions](https://adguard-vpn.com/kb/adguard-vpn-for-linux/installation/).
+Run `adguardvpn-cli login` in a terminal, then refresh the app's account information.
+The GUI does not handle or store account passwords.
 
-⚠️ Unofficial community project. Not affiliated with AdGuard Software Ltd.
-Requires the official adguardvpn-cli to be installed and authenticated.
+Advanced routing, exclusions, SOCKS settings, CLI updates and GUI authentication
+are outside this version's scope. Existing advanced CLI settings are preserved.
+The old `--boot` option is not advertised as a kill switch: reconnecting alone
+does not guarantee that traffic is blocked while a tunnel is down.
 
-<p align="center">
-  <img src="assets/screenshots/home.png" alt="Home screen" width="820"/>
-</p>
+## Fedora Workstation
 
-## Features
+Requirements: GTK >= 4.12, libadwaita >= 1.4, a session D-Bus, and the official
+CLI. The initial UI uses English; the previous Python translations remain in
+reference source but are not yet ported.
 
-- **One-click connect** — large circular Connect button with explicit
-  `disconnected / connecting / connected / disconnecting / error` states,
-  branded green glow when active.
-- **Locations list** with live ping, country flag-badge, fuzzy search by
-  country/city/ISO code, `All / Favorites` filter and per-row favorite
-  toggle. The active location shows a red **Disconnect** button; pending
-  rows get an amber pill with an iOS-style segmented spinner painted
-  directly inside the button — no clunky banners.
-- **Full coverage of CLI `config set-*`**: TUN/SOCKS mode, protocol
-  (auto/http2/quic), TUN routing, system DNS, post-quantum, SOCKS
-  host/port/auth, route script, update channel, telemetry, bound interface.
-- **Kill switch** powered by the CLI's built-in `--boot` flag — the daemon
-  reconnects indefinitely if the tunnel drops. No iptables, no sudo.
-- **Autostart** via the standard `~/.config/autostart/adguard-gui.desktop`
-  (works on GNOME / KDE / XFCE / Cinnamon).
-- **Auto-connect on launch** — `Off / Last location / Fastest`.
-- **System tray** with `Connect (fastest) / Disconnect / Open / Quit`;
-  the icon colour reflects connection state. Closing the window minimises
-  to tray.
-- **Site exclusions** — switch general/selective mode, add/remove domains
-  and CIDR ranges.
-- **Single instance** via `QLockFile` — a second launch surfaces the
-  existing window instead of starting a new process.
-- **6 languages**: English, Русский, Deutsch, Español, Français, 中文.
-  Switching is **live, no restart required**.
-- **Session duration** is read from the real tun-interface creation time
-  (`/sys/class/net/<iface>` mtime) — correct even if the CLI was already
-  connected before the GUI started.
-
-## Screenshots
-
-| Home | Locations |
-|---|---|
-| ![Home](assets/screenshots/home.png) | ![Locations](assets/screenshots/locations.png) |
-
-| Settings | Exclusions |
-|---|---|
-| ![Settings](assets/screenshots/settings.png) | ![Exclusions](assets/screenshots/exclusions.png) |
-
-| Account | About |
-|---|---|
-| ![Account](assets/screenshots/account.png) | ![About](assets/screenshots/about.png) |
-
-## Requirements
-
-- Linux with any Wayland/X11 desktop environment
-- [`adguardvpn-cli`](https://github.com/AdguardTeam/AdGuardVPNCLI) installed
-  and authenticated. The official installer sets `CAP_NET_ADMIN` on the
-  binary, so the GUI never needs sudo.
-- Python 3.10+
-- PySide6 (Qt 6)
-
-## Installation
-
-The project ships native packaging for every major Linux family plus
-universal formats (AppImage, Flatpak, Snap).
-
-| Distribution                            | Package manager     | Command                                  |
-|-----------------------------------------|---------------------|------------------------------------------|
-| Debian, Ubuntu, Mint, Pop!_OS, Elementary | `apt` / `dpkg`     | `make deb && sudo apt install ./build/*.deb` |
-| Fedora, RHEL, CentOS Stream, Alma, Rocky | `dnf` / `yum`       | `make rpm && sudo dnf install ./build/rpm/RPMS/noarch/*.rpm` |
-| openSUSE, SLE                            | `zypper`            | `make rpm && sudo zypper install ./build/rpm/RPMS/noarch/*.rpm` |
-| Arch, Manjaro, EndeavourOS               | `pacman` / `makepkg` | `make arch && sudo pacman -U build/*.pkg.tar.*` |
-| Alpine                                   | `apk` / `abuild`    | `make alpine`                            |
-| Void Linux                               | `xbps` / `xbps-src` | `make void` (see hint)                   |
-| Gentoo                                   | `emerge` / ebuild   | `make gentoo` (drop into overlay)        |
-| NixOS / Nix                              | `nix`               | `make nix` → `nix profile install ./packaging/nix#default` |
-| Any distro (universal)                   | Flatpak             | `make flatpak && flatpak install ./build/*.flatpak` |
-| Any distro (universal)                   | Snap                | `make snap && sudo snap install --dangerous ./build/*.snap` |
-| Any distro (universal)                   | AppImage            | `make appimage && ./build/*.AppImage`    |
-
-All build targets live in the root `Makefile`; per-distribution meta lives
-under [`packaging/`](packaging/). See [`packaging/README.md`](packaging/README.md)
-for prerequisites and CI tips.
-
-### Manual install from sources
-
-```bash
-sudo make install                    # into /usr
-sudo make install PREFIX=/usr/local  # or any prefix you like
+```sh
+sudo dnf install rust cargo gcc make gtk4-devel libadwaita-devel desktop-file-utils rpm-build
+make build
+sudo make install
+adguard-gui
 ```
 
-`make uninstall` removes everything that `make install` placed.
+This builds the app; it does not execute tests or connect the VPN.
 
-### Run from the repository (development)
+### Tray behavior
 
-```bash
-python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
-.venv/bin/python main.py
+GNOME does not provide a tray host by default. Install/enable a compatible
+AppIndicator extension if you want a tray icon. The application does not install
+or enable Shell extensions automatically.
+
+- With a registered tray host: closing the window hides it and keeps the GUI running.
+- Without a tray host: closing the window exits the GUI; the VPN stays connected.
+- If a tray host disappears while the app is hidden: the window reappears.
+- Launching the app again presents the existing window.
+- The tray/application Quit action exits the GUI without disconnecting the VPN.
+- `adguard-gui --minimized` starts hidden only when a tray host is available;
+  otherwise it opens the window after a short registration grace period.
+
+Use the explicit **Disconnect** action to disconnect the VPN.
+
+### Resource use
+
+One GLib/Gio main loop handles UI, subprocesses and tray traffic; there is no
+separate async runtime, worker pool, tray helper process or permanent heartbeat.
+CLI commands are serialized. Status requests are deduplicated, with one process
+at a time. Status refreshes every 5 seconds with the window visible and every
+30 seconds while hidden; opening the window or completing a mutation refreshes
+status immediately. No UI animations run while hidden.
+
+Locations, latency, account and configuration are fetched on startup or explicit
+refresh, rather than on each status tick. Changing application settings also
+refreshes these sources. Location filtering reuses existing rows.
+
+These are implementation choices, not measured performance claims. CPU, memory,
+Wayland behavior and actual CLI compatibility still require Fedora acceptance
+and performance testing.
+
+## Settings and upgrades
+
+The command remains `adguard-gui`. Settings remain at
+`${XDG_CONFIG_HOME:-$HOME/.config}/adguard-gui/config.json`; a legacy file under
+`~/.config` is imported when a custom XDG directory is used. Original settings
+are backed up as `config.json.pre-gtk` before rewriting. Writes are atomic and
+unknown/legacy keys are preserved; malformed source files are not overwritten.
+
+Legacy country favorites are accepted; editing one city's favorite expands the
+country entry into city entries. Old tray and kill-switch preference keys are
+preserved but no longer control the Rust app.
+
+The old RPM launcher and desktop file are replaced on upgrade. For an old manual
+`make install`, remove `/usr/share/applications/adguard-gui.desktop` to avoid a
+duplicate menu entry after installing the new application-ID desktop file.
+The old Python package may remain on disk but is not loaded by the Rust binary.
+
+Changing DNS uses the CLI's `config set-dns` command. An empty input leaves the
+current DNS setting unchanged; use the official CLI to restore its default.
+
+## RPM / SRPM
+
+```sh
+make rpm
+sudo dnf install ./build/rpm/RPMS/*/adguard-gui-*.rpm
 ```
 
-## Usage
+`make source` generates a source archive containing `Cargo.lock` and vendored
+crates. The RPM compiles with `--frozen`, without downloading dependencies.
+It has no `adguardvpn-cli` RPM dependency: an official/manual CLI installation
+is detected at runtime. Native GTK/library dependencies are generated by RPM.
+Do not use the old multi-distribution recipes with the Rust application.
+See [packaging/README.md](packaging/README.md).
 
-After installation a desktop entry appears in your application menu under
-*Network*; from a terminal just run `adguard-gui`. CLI flags:
+## Development and verification
 
-- `--minimized` — start hidden in tray (used by the autostart entry).
+`src/` contains the application, CLI runner, output parsers, settings and tray.
+`Cargo.lock` is committed. Files in `adguard_gui/`, `main.py`, `pyproject.toml`,
+`requirements.txt` and `scripts/generate_icons.py` are legacy Python reference
+source, not the supported application or build entrypoint.
 
-GUI preferences live in `~/.config/adguard-gui/config.json`. VPN
-configuration itself lives in `adguardvpn-cli` and is exposed through the
-*Settings* page.
-
-## Project layout
-
-```
-adguard_gui/         — application (PySide6)
-  adapters/          — typed wrapper around adguardvpn-cli
-  models/            — dataclasses + AppState (QObject with signals)
-  parsers/           — text parsers (ANSI strip, status, license,
-                       locations, config show, exclusions)
-  services/          — CommandRunner, Poller, autostart manager
-  storage/           — config.json (GUI-only prefs)
-  ui/                — pages, widgets, tray, MainWindow, theme.py, i18n.py
-assets/
-  icons/             — master SVG + hicolor PNG set (16…512)
-  screenshots/       — README screenshots
-packaging/           — .desktop, debian/, rpm.spec, PKGBUILD
-scripts/             — generate_icons.py
-Makefile             — install / deb / rpm / icons / clean
-```
-
-## Architecture
-
-A single `AppState` QObject holds the entire visible VPN state (`status`,
-`license`, `locations`, `config`, `exclusions`) and emits signals when any
-slice changes. `CommandRunner` runs `CliAdapter` calls on `QThreadPool`,
-parses output and updates the state. UI pages subscribe to the signals
-they care about — no UI page ever shells out to the CLI directly.
-
-Changing the language rebuilds `MainWindow._build_ui()` and calls
-`TrayIcon._retranslate()` — the app is fully translatable without a
-restart.
-
-## Localization
-
-English strings are the canonical keys (`tr("Home")`). Translations live
-in `adguard_gui/i18n.py` as a `TRANSLATIONS[lang]` dict. Missing keys
-gracefully fall back to the English original.
-
-## Contributing
-
-Issues and pull requests are welcome. For a quick local check:
-
-```bash
-.venv/bin/python -m compileall adguard_gui
-QT_QPA_PLATFORM=offscreen timeout 5 .venv/bin/python main.py
-```
-
-Adding a translation: drop a new `TRANSLATIONS["xx"]` block in
-`adguard_gui/i18n.py` and register the language tuple in `LANGUAGES`.
-
-## Donations
-
-If this project saves you a few hours, consider sending a tip — any
-amount is appreciated, none is expected. Donations support development
-of the **GUI only** and are not connected to AdGuard Software Ltd.
-
-| Network                                 | Address |
-|-----------------------------------------|---------|
-| **Bitcoin** (BTC)                       | `1MDKLxvJLsA6hQyLVuXqrkv4kyDLTBmx3j` |
-| **Litecoin** (LTC)                      | `LaXeNja3Nr4VmhpRcjLMeobNRXQSnG9B9e` |
-| **Ethereum / ERC-20** (ETH, USDT, USDC) | `0x84ca271b0663d843540d2a09b607bd75d2079775` |
-| **USDT** — Tron (TRC-20)                | `THnsTAcMogowzPGt7ntxaMCMEn2tyz6c5S` |
-| **USDT** — TON                          | `UQDLQVv4ufx3Aj9uYsZqf1GtFTWmcddZRcnguRbEFNH3POty` |
-| **Solana** (SOL, SPL tokens)            | `HSNHbAsungs7tLYgh31kR27Pi42ac9Edn1cXDGkfYeXa` |
-
-Please double-check the address and network before sending — wrong-network
-transfers can be unrecoverable.
-
-## License
-
-[MIT](LICENSE).
-
-## AI assistance
-
-AI tools were used during development.
-
-## Disclaimer
-
-This project is not affiliated with AdGuard Software Ltd. It is a
-community frontend that calls the official
-[`adguardvpn-cli`](https://github.com/AdguardTeam/AdGuardVPNCLI) and stores
-no credentials of its own.
+CI build/release workflows are manual (`workflow_dispatch`); releases are drafts.
+They do not run the GUI or connect the VPN. Automated tests, desktop acceptance
+and performance measurements are opt-in. See [VALIDATION.md](VALIDATION.md) for
+the checks to request before release.

@@ -1,3 +1,16 @@
+# 0.3.0 — Fedora GNOME Rust migration (2026-11-09)
+
+- Replace the supported application with Rust + GTK4/libadwaita.
+- Add serialized asynchronous CLI execution, actual status parsing, location
+  search, per-city favorites, basic settings and CLI account information.
+- Add native StatusNotifierItem/DBusMenu tray integration with safe no-host
+  behavior and adaptive 5/30-second status refresh.
+- Preserve and back up legacy settings; keep the CLI installed separately.
+- Replace default builds and RPM packaging with locked/offline Rust builds.
+- Defer advanced settings, exclusions, GUI authentication and translations.
+- Keep the Python application as historical reference; no performance or desktop
+  compatibility claims are made before opt-in Fedora acceptance testing.
+
 # Changelog
 
 ## v0.2.0 — first public release (May 24, 2026)
