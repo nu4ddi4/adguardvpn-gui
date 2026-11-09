@@ -5,6 +5,7 @@ import re
 from adguard_gui.models.types import LicenseInfo
 from adguard_gui.parsers.ansi import strip_ansi
 
+LOGGED_IN_RE = re.compile(r"\blogged\s+in\s+as\b", re.IGNORECASE)
 EMAIL_RE = re.compile(r"Logged in as\s+(\S+@\S+)", re.IGNORECASE)
 TIER_RE = re.compile(r"using the\s+([A-Za-z]+)\s+version", re.IGNORECASE)
 DEVICES_RE = re.compile(r"Up to\s+(\d+)\s+devices", re.IGNORECASE)
@@ -12,14 +13,15 @@ VALID_RE = re.compile(r"valid until\s+(\d{4}-\d{2}-\d{2})", re.IGNORECASE)
 
 
 def parse_license(stdout: str, stderr: str, exit_code: int) -> LicenseInfo:
-    text = strip_ansi(stdout)
+    text = "\n".join(strip_ansi(part) for part in (stdout, stderr) if part)
     raw = text.strip()
     info = LicenseInfo(raw=raw)
 
-    if "not logged in" in text.lower() or "please log in" in text.lower() or exit_code != 0 and not text.strip():
+    if "not logged in" in text.lower() or "please log in" in text.lower() or exit_code != 0:
         info.logged_in = False
         return info
 
+    info.logged_in = LOGGED_IN_RE.search(text) is not None
     email = EMAIL_RE.search(text)
     tier = TIER_RE.search(text)
     devices = DEVICES_RE.search(text)
