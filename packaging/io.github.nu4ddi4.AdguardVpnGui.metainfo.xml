@@ -13,5 +13,5 @@
   <url type="homepage">https://github.com/nu4ddi4/adguardvpn-gui</url>
   <url type="bugtracker">https://github.com/nu4ddi4/adguardvpn-gui/issues</url>
   <provides><binary>adguard-gui</binary></provides>
-  <releases><release version="0.4.0" date="2026-11-09"/></releases>
+  <releases><release version="0.4.1" date="2026-11-12"/><release version="0.4.0" date="2026-11-09"/></releases>
 </component>

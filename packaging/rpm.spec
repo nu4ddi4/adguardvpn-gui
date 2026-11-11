@@ -1,4 +1,4 @@
-%{!?app_version:%global app_version 0.4.0}
+%{!?app_version:%global app_version 0.4.1}
 %global debug_package %{nil}
 %global app_id io.github.nu4ddi4.AdguardVpnGui
 Name:           adguard-gui
@@ -27,10 +27,10 @@ Requires:       hicolor-icon-theme
 %autosetup -n %{name}-%{version}
 %build
 export CARGO_HOME="%{_builddir}/%{name}-cargo"
-export CARGO_TARGET_DIR="$PWD/target"
+export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$PWD/target}"
 cargo build --release --frozen
 %install
-%make_install PREFIX=%{_prefix}
+%make_install PREFIX=%{_prefix} CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-target}"
 %check
 # 앱 실행과 로그인·VPN 연결 테스트는 수행하지 않습니다.
 desktop-file-validate %{buildroot}%{_datadir}/applications/%{app_id}.desktop

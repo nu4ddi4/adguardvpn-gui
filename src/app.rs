@@ -1,5 +1,5 @@
 use crate::{
-    cli,
+    cli, integration,
     model::{self, Location, Status},
     preferences::{self, Preferences},
     tray::Tray,
@@ -202,7 +202,11 @@ impl Controller {
             let protocol = ["auto", "http2", "quic"][this.ui.protocol.selected().min(2) as usize];
             this.enqueue(Request::Configure(
                 protocol.into(),
-                this.ui.dns.text().trim().into(),
+                if this.prefs.borrow().adguard_integration {
+                    String::new()
+                } else {
+                    this.ui.dns.text().trim().into()
+                },
             ));
         });
         let this = self.clone();
@@ -364,7 +368,7 @@ impl Controller {
                 request,
                 Request::Connect(_) | Request::Disconnect | Request::Locations
             ) {
-                60
+                30
             } else {
                 prefs.timeout_sec.min(30)
             };
@@ -389,7 +393,16 @@ impl Controller {
                     vec!["config".into(), "set-protocol".into(), protocol.clone()]
                 }
             };
-            let mut result = cli::run(&prefs.binary_path, &args, timeout).await;
+            let mut result = if prefs.adguard_integration {
+                match &request {
+                    Request::Status => integration::status(&prefs).await,
+                    Request::Connect(_) => integration::connect(&prefs, &args).await,
+                    Request::Disconnect => integration::disconnect(&prefs).await,
+                    _ => cli::run(&prefs.binary_path, &args, timeout).await,
+                }
+            } else {
+                cli::run(&prefs.binary_path, &args, timeout).await
+            };
             if let Request::Configure(_, dns) = &request {
                 if result.is_ok() && !dns.is_empty() {
                     result = cli::run(
@@ -508,7 +521,7 @@ impl Controller {
                                 &dns
                             });
                         self.ui.protocol.set_sensitive(true);
-                        self.ui.dns.set_sensitive(true);
+                        self.ui.dns.set_sensitive(!self.prefs.borrow().adguard_integration);
                     } else {
                         self.config_loaded.set(false);
                         self.ui
@@ -569,7 +582,7 @@ impl Controller {
         self.ui.connect.set_sensitive(!busy && !status.connected());
         self.ui
             .disconnect
-            .set_sensitive(!busy && status.connected());
+            .set_sensitive(!busy && (status.connected() || self.prefs.borrow().adguard_integration));
         self.ui.preferences_save.set_sensitive(!busy);
         self.ui
             .config_apply
