@@ -129,6 +129,26 @@ impl Ui {
         home.append(&note(
             "앱을 종료해도 VPN은 연결을 유지합니다. 연결 해제 버튼으로 종료하세요.",
         ));
+        if prefs.adguard_integration {
+            home.append(&note("VPN 대상 목록에 있는 앱만 광고 차단을 거쳐 VPN을 사용합니다. 초기 대상은 Chrome입니다. Tailscale의 기기망·DNS 설정은 유지합니다."));
+            let targets = gtk::Button::with_label("VPN 대상 목록 열기");
+            let target_window = window.clone();
+            let target_toast = toast.clone();
+            targets.connect_clicked(move |_| {
+                let file = gio::File::for_path(crate::integration::targets_path());
+                let messages = target_toast.clone();
+                gtk::FileLauncher::new(Some(&file)).launch(
+                    Some(&target_window),
+                    gio::Cancellable::NONE,
+                    move |result| {
+                        if let Err(error) = result {
+                            messages.add_toast(adw::Toast::new(&format!("대상 목록을 열지 못했습니다: {error}")));
+                        }
+                    },
+                );
+            });
+            home.append(&targets);
+        }
         let account_group = adw::PreferencesGroup::builder().title("계정·구독").build();
         let account = note("구독 정보 확인 중…");
         account_group.add(&account);
@@ -212,7 +232,11 @@ impl Ui {
             .model(&gtk::StringList::new(&["자동", "HTTP/2", "QUIC"]))
             .build();
         let dns = adw::EntryRow::builder()
-            .title("DNS 서버 (비우면 현재 설정 유지)")
+            .title(if prefs.adguard_integration {
+                "DNS는 Tailscale·시스템 설정을 유지합니다"
+            } else {
+                "DNS 서버 (비우면 현재 설정 유지)"
+            })
             .build();
         group.add(&protocol);
         group.add(&dns);

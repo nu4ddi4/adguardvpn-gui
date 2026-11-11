@@ -2,6 +2,7 @@ VERSION := $(shell sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml | head -1)
 PREFIX ?= /usr
 DESTDIR ?=
 CARGO ?= cargo
+CARGO_TARGET_DIR ?= target
 BUILDDIR := $(CURDIR)/build
 APP_ID := io.github.nu4ddi4.AdguardVpnGui
 
@@ -10,7 +11,7 @@ all: build
 build:
 	$(CARGO) build --release --locked
 install:
-	install -Dm755 target/release/adguard-gui "$(DESTDIR)$(PREFIX)/bin/adguard-gui"
+	install -Dm755 "$(CARGO_TARGET_DIR)/release/adguard-gui" "$(DESTDIR)$(PREFIX)/bin/adguard-gui"
 	install -Dm644 packaging/adguard-gui.desktop "$(DESTDIR)$(PREFIX)/share/applications/$(APP_ID).desktop"
 	install -Dm644 assets/icons/adguard-gui.svg "$(DESTDIR)$(PREFIX)/share/icons/hicolor/scalable/apps/adguard-gui.svg"
 	install -Dm644 packaging/$(APP_ID).metainfo.xml "$(DESTDIR)$(PREFIX)/share/metainfo/$(APP_ID).metainfo.xml"

@@ -7,6 +7,7 @@ pub enum Status {
     Connecting,
     Disconnecting,
     Disconnected,
+    RouteAttention(String),
     #[default]
     Unknown,
 }
@@ -18,6 +19,7 @@ impl Status {
             Self::Connecting => "연결 중…".into(),
             Self::Disconnecting => "연결 해제 중…".into(),
             Self::Disconnected => "연결되지 않음".into(),
+            Self::RouteAttention(reason) => format!("VPN 전달 확인 필요 · {reason}"),
             Self::Unknown => "상태 확인 불가".into(),
         }
     }
@@ -53,6 +55,9 @@ pub fn clean(text: &str) -> String {
 
 pub fn parse_status(text: &str) -> Status {
     let text = clean(text);
+    if let Some(reason) = text.strip_prefix("ADGUARD_ROUTE_ATTENTION: ") {
+        return Status::RouteAttention(reason.to_owned());
+    }
     let low = text.to_lowercase();
     if low.contains("not connected")
         || low.contains("vpn is disconnected")

@@ -7,6 +7,8 @@ use std::{collections::BTreeMap, env, fs, io, os::unix::fs::OpenOptionsExt, path
 #[serde(default)]
 pub struct Preferences {
     pub binary_path: String,
+    pub adguard_integration: bool,
+    pub adguard_binary_path: String,
     pub timeout_sec: u32,
     pub favorite_locations: Vec<String>,
     pub autostart: bool,
@@ -20,6 +22,8 @@ impl Default for Preferences {
     fn default() -> Self {
         Self {
             binary_path: default_binary(),
+            adguard_integration: false,
+            adguard_binary_path: "/usr/local/bin/adguard-cli".into(),
             timeout_sec: 30,
             favorite_locations: Vec::new(),
             autostart: false,

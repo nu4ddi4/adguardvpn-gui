@@ -1,5 +1,6 @@
 mod app;
 mod cli;
+mod integration;
 mod model;
 mod places;
 mod preferences;
