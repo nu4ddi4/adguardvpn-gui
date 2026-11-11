@@ -1,0 +1,18 @@
+[Unit]
+Description=Start AdGuard engine at graphical login
+After=graphical-session-pre.target
+PartOf=graphical-session.target
+StartLimitIntervalSec=0
+
+[Service]
+# exec makes login proceed immediately; the bounded helper runs in the background.
+Type=exec
+ExecStart=/usr/bin/python3 %h/.local/libexec/adguard-engine-login.py
+ExecStop=/usr/local/bin/adguard-cli stop
+RemainAfterExit=yes
+Restart=on-failure
+RestartSec=20s
+TimeoutStopSec=15s
+
+[Install]
+WantedBy=graphical-session.target
