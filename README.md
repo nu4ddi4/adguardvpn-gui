@@ -70,6 +70,12 @@ DNS는 시스템·Tailscale 설정을 유지하며 모든 DNS가 VPN을 경유�
 
 ## 빌드
 
+광고 차단 엔진의 로그인 자동 시작은 GUI 트레이 자동 시작과 별개입니다.
+`scripts/adguard-engine-login.py`와 `packaging/adguard-engine-login.service`를
+사용자 libexec·systemd 폴더에 설치해 그래픽 로그인 때 시작할 수 있습니다.
+이미 실행 중이면 재시작하지 않으며, 네트워크 지연·시작 실패는 20초 뒤 재시도합니다.
+GUI에서 사용자가 광고 차단을 끄면 그 세션에서 다시 강제로 켜지 않습니다.
+
 Fedora 43의 GTK 4.20 이상·libadwaita 1.8 이상과 Rust 1.92 이상이 필요합니다.
 Rust 바인딩은 gtk4 0.11·libadwaita 0.9를 사용하고 Cargo.lock으로 버전을 고정합니다.
 
