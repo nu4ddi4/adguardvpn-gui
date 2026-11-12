@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=AdGuard engine
+Comment=Start AdGuard protection with the existing configuration at login
+Exec=adguard-engine-login
+TryExec=adguard-engine-login
+Terminal=false
+NoDisplay=true
+StartupNotify=false
+X-GNOME-Autostart-enabled=true
