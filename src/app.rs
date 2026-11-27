@@ -44,6 +44,13 @@ impl Request {
     }
 }
 
+pub struct LocationRow {
+    location: Location,
+    row: adw::ActionRow,
+    connect: gtk::Button,
+    badge: gtk::Label,
+}
+
 pub struct Controller {
     application: adw::Application,
     ui: Ui,
@@ -64,7 +71,7 @@ pub struct Controller {
     account_checked: RefCell<Instant>,
     login_poll_until: RefCell<Option<Instant>>,
     generation: Cell<u64>,
-    rows: RefCell<Vec<(Location, adw::ActionRow, gtk::ToggleButton)>>,
+    rows: RefCell<Vec<LocationRow>>,
     site_current: RefCell<Option<String>>,
     site_loaded: RefCell<Option<String>>,
     update_busy: Cell<bool>,
@@ -118,6 +125,7 @@ impl Controller {
             "quit",
             "refresh",
             "locations",
+            "search",
             "about",
         ] {
             let action = gio::SimpleAction::new(name, None);
@@ -127,6 +135,10 @@ impl Controller {
         }
         self.application
             .set_accels_for_action("app.quit", &["<Control>q"]);
+        self.application
+            .set_accels_for_action("app.refresh", &["<Control>r"]);
+        self.application
+            .set_accels_for_action("app.search", &["<Control>f"]);
         let this = self.clone();
         self.application.connect_command_line(move |_, command| {
             let args = command.arguments();
@@ -226,6 +238,19 @@ impl Controller {
             .connect_toggled(move |_| this.filter_locations());
         let this = self.clone();
         self.ui
+            .sort_name
+            .connect_toggled(move |_| this.arrange_locations());
+        let this = self.clone();
+        self.ui.error_copy.connect_clicked(move |_| {
+            let text = this.ui.error.text();
+            this.copy_to_clipboard(&text, "오류 내용을 복사했습니다");
+        });
+        let this = self.clone();
+        self.ui
+            .error_close
+            .connect_clicked(move |_| this.ui.message(""));
+        let this = self.clone();
+        self.ui
             .preferences_save
             .connect_clicked(move |_| this.save_preferences());
         let this = self.clone();
@@ -271,16 +296,21 @@ impl Controller {
             this.enqueue(Request::SiteSetMode(this.selected_site_mode()))
         });
         let this = self.clone();
-        self.ui.site_add.connect_clicked(move |_| {
-            match crate::sites::validate(this.ui.site_input.text().as_str()) {
-                Ok(value) => this.enqueue(Request::SiteAdd(this.selected_site_mode(), value)),
-                Err(error) => this.ui.message(&error),
-            }
-        });
+        self.ui.site_add.connect_clicked(move |_| this.add_site());
+        let this = self.clone();
+        self.ui
+            .site_input
+            .connect_entry_activated(move |_| this.add_site());
         let this = self.clone();
         self.ui
             .update_check
             .connect_clicked(move |_| this.check_updates());
+        let this = self.clone();
+        self.ui.diagnostics_copy.connect_clicked(move |_| {
+            let buffer = this.ui.account_details.buffer();
+            let text = buffer.text(&buffer.start_iter(), &buffer.end_iter(), false);
+            this.copy_to_clipboard(&text, "진단 정보를 복사했습니다");
+        });
         let this = self.clone();
         self.ui
             .update_install
@@ -372,7 +402,14 @@ impl Controller {
             "disconnect" => self.enqueue(Request::Disconnect),
             "locations" => {
                 self.ui.message("");
+                self.show();
+                self.ui.stack.set_visible_child_name("locations");
                 self.enqueue(Request::Locations);
+            }
+            "search" => {
+                self.show();
+                self.ui.stack.set_visible_child_name("locations");
+                self.ui.search.grab_focus();
             }
             "refresh" => {
                 self.ui.message("");
@@ -736,7 +773,22 @@ impl Controller {
 
     fn render_status(&self) {
         let status = self.status.borrow();
-        self.ui.status.set_label(&status.label());
+        let label = status.label();
+        self.ui.status.set_label(&label);
+        // 다른 화면에서도 연결 상태를 알 수 있도록 창 제목 아래에 같은 문구를 표시합니다.
+        self.ui.title.set_subtitle(&label);
+        let style = match &*status {
+            Status::Connected(_) => "success",
+            Status::Connecting | Status::Disconnecting => "warning",
+            Status::Disconnected => "dim-label",
+            Status::Unknown => "error",
+        };
+        for class in ["success", "warning", "error", "dim-label"] {
+            self.ui.status.remove_css_class(class);
+            self.ui.icon.remove_css_class(class);
+        }
+        self.ui.status.add_css_class(style);
+        self.ui.icon.add_css_class(style);
         let busy = self.mutation_pending.get();
         self.ui.connect.set_sensitive(!busy && !status.connected());
         self.ui
@@ -762,15 +814,61 @@ impl Controller {
             .set_sensitive(!busy && self.site_current.borrow().is_some() && site_ready);
         self.ui.site_mode.set_sensitive(!busy);
         self.ui.site_refresh.set_sensitive(!busy);
+        let connected = match &*status {
+            Status::Connected(city) => Some(city.to_lowercase()),
+            _ => None,
+        };
+        for entry in self.rows.borrow().iter() {
+            let current = connected.as_deref().is_some_and(|city| {
+                entry.location.city.to_lowercase() == city
+                    || crate::places::display(&entry.location.city).to_lowercase() == city
+            });
+            entry.badge.set_visible(current);
+            entry.connect.set_sensitive(!busy && !current);
+        }
         if let Some(tray) = self.tray.borrow().as_ref() {
             tray.update(&status);
         }
     }
 
     fn is_favorite(&self, location: &Location) -> bool {
-        let prefs = self.prefs.borrow();
-        prefs.favorite_locations.contains(&location.key())
-            || prefs.favorite_locations.contains(&location.iso)
+        model::is_favorite(location, &self.prefs.borrow().favorite_locations)
+    }
+
+    /// 즐겨찾기를 먼저 두고 현재 정렬 기준으로 행을 다시 배치합니다.
+    fn arrange_locations(&self) {
+        let by_name = self.ui.sort_name.is_active();
+        let order = {
+            let rows = self.rows.borrow();
+            let favorites = self.prefs.borrow().favorite_locations.clone();
+            let locations: Vec<Location> =
+                rows.iter().map(|entry| entry.location.clone()).collect();
+            model::arrange_locations(&locations, &favorites, by_name)
+        };
+        {
+            let rows = self.rows.borrow();
+            for index in order {
+                let row = &rows[index].row;
+                self.ui.locations.remove(row);
+                self.ui.locations.append(row);
+            }
+        }
+        if self.ui.location_empty.parent().is_some() {
+            self.ui.locations.remove(&self.ui.location_empty);
+        }
+        self.ui.locations.append(&self.ui.location_empty);
+        self.filter_locations();
+    }
+
+    fn copy_to_clipboard(&self, text: &str, done: &str) {
+        if text.trim().is_empty() {
+            self.ui
+                .toast
+                .add_toast(adw::Toast::new("복사할 내용이 없습니다"));
+            return;
+        }
+        self.ui.window.clipboard().set_text(text);
+        self.ui.toast.add_toast(adw::Toast::new(done));
     }
 
     fn build_locations(self: &Rc<Self>) {
@@ -799,6 +897,14 @@ impl Controller {
                 .active(self.is_favorite(location))
                 .build();
             row.add_prefix(&favorite);
+            let badge = gtk::Label::builder()
+                .label("연결됨")
+                .valign(gtk::Align::Center)
+                .visible(false)
+                .build();
+            badge.add_css_class("success");
+            badge.add_css_class("caption");
+            row.add_suffix(&badge);
             let connect = gtk::Button::builder()
                 .label("연결")
                 .valign(gtk::Align::Center)
@@ -843,21 +949,26 @@ impl Controller {
                         rolling_back.set(false);
                     }
                 }
-                this.filter_locations();
+                this.arrange_locations();
             });
             self.ui.locations.append(&row);
-            self.rows
-                .borrow_mut()
-                .push((location.clone(), row, favorite));
+            self.rows.borrow_mut().push(LocationRow {
+                location: location.clone(),
+                row,
+                connect,
+                badge,
+            });
         }
-        self.filter_locations();
+        self.ui.locations.append(&self.ui.location_empty);
+        self.arrange_locations();
     }
 
     fn filter_locations(&self) {
         let query = self.ui.search.text().to_lowercase();
         let favorites = self.ui.favorites.is_active();
         let mut count = 0;
-        for (location, row, _) in self.rows.borrow().iter() {
+        for entry in self.rows.borrow().iter() {
+            let location = &entry.location;
             let visible = (!favorites || self.is_favorite(location))
                 && format!(
                     "{} {} {} {} {}",
@@ -869,12 +980,23 @@ impl Controller {
                 )
                 .to_lowercase()
                 .contains(&query);
-            row.set_visible(visible);
+            entry.row.set_visible(visible);
             count += usize::from(visible);
         }
+        let total = self.rows.borrow().len();
+        self.ui.location_empty.set_visible(total > 0 && count == 0);
+        let sort_label = if self.ui.sort_name.is_active() {
+            "이름순"
+        } else {
+            "응답 시간순"
+        };
         self.ui
             .location_hint
-            .set_label(&format!("서버 {count}개 · 새로 고침으로 응답 시간 갱신"));
+            .set_label(&if query.is_empty() && !favorites {
+                format!("서버 {total}개 · {sort_label} · 즐겨찾기 우선")
+            } else {
+                format!("서버 {count}개 표시 / 전체 {total}개 · {sort_label}")
+            });
     }
 
     fn selected_site_mode(&self) -> String {
@@ -882,6 +1004,13 @@ impl Controller {
             "selective".into()
         } else {
             "general".into()
+        }
+    }
+
+    fn add_site(self: &Rc<Self>) {
+        match crate::sites::validate(self.ui.site_input.text().as_str()) {
+            Ok(value) => self.enqueue(Request::SiteAdd(self.selected_site_mode(), value)),
+            Err(error) => self.ui.message(&error),
         }
     }
 
@@ -1082,6 +1211,21 @@ mod integration_tests {
         }
         None
     }
+    fn location_titles(list: &gtk::ListBox) -> Vec<String> {
+        let mut titles = Vec::new();
+        let mut index = 0;
+        while let Some(row) = list.row_at_index(index) {
+            if let Some(child) = row.child() {
+                if let Ok(action) = child.downcast::<adw::ActionRow>() {
+                    if action.is_visible() {
+                        titles.push(action.title().to_string());
+                    }
+                }
+            }
+            index += 1;
+        }
+        titles
+    }
     #[test]
     fn subscription_and_site_editor_through_real_gtk_and_cli_transport() {
         let root = std::env::temp_dir().join(format!("adguard-gtk-test-{}", std::process::id()));
@@ -1114,6 +1258,24 @@ mod integration_tests {
         let controller = Controller::new(&application);
         controller.install();
         controller.show();
+        settle(&controller);
+        // 즐겨찾기가 없으면 응답 시간이 빠른 서버가 먼저 오고, 이름순으로 바꿀 수 있습니다.
+        let titles = location_titles(&controller.ui.locations);
+        assert_eq!(
+            titles.first().map(String::as_str),
+            Some("일본 · 도쿄"),
+            "{titles:?}"
+        );
+        assert!(titles.contains(&"미국 · 뉴욕".to_owned()), "{titles:?}");
+        controller.ui.sort_name.set_active(true);
+        settle(&controller);
+        let titles = location_titles(&controller.ui.locations);
+        assert_eq!(
+            titles.first().map(String::as_str),
+            Some("대한민국 · 서울"),
+            "{titles:?}"
+        );
+        controller.ui.sort_name.set_active(false);
         settle(&controller);
         let set_case = |case: &str| {
             let mut state: serde_json::Value =

@@ -31,7 +31,7 @@ elif args[:1]==['site-exclusions']:
         print('\n'.join(items))
 elif args==['status']: print('VPN is not connected')
 elif args==['config','show']: print('Protocol: auto\nDNS upstream: default')
-elif args==['list-locations']: print('KR  South Korea  Seoul  15 ms')
+elif args==['list-locations']: print('ISO  COUNTRY  CITY  PING\nKR  South Korea  Seoul  35 ms\nJP  Japan  Tokyo  12 ms\nUS  United States  New York  N/A')
 else:
     print('Unexpected command: '+repr(args),file=sys.stderr); sys.exit(3)
 path.write_text(json.dumps(state))
