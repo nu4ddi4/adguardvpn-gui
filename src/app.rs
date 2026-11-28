@@ -1259,6 +1259,9 @@ mod integration_tests {
         controller.install();
         controller.show();
         settle(&controller);
+        // 창 표시만으로는 초기 요청이 걸리지 않으므로 서버 목록 화면을 직접 열어 불러옵니다.
+        controller.action("locations");
+        settle(&controller);
         // 즐겨찾기가 없으면 응답 시간이 빠른 서버가 먼저 오고, 이름순으로 바꿀 수 있습니다.
         let titles = location_titles(&controller.ui.locations);
         assert_eq!(
