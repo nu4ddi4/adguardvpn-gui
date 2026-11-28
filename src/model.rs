@@ -40,6 +40,41 @@ impl Location {
     }
 }
 
+pub fn is_favorite(location: &Location, favorites: &[String]) -> bool {
+    favorites
+        .iter()
+        .any(|key| key == &location.key() || key == &location.iso)
+}
+
+/// 서버 목록의 표시 순서입니다. 즐겨찾기를 먼저 두고, 그다음 응답 시간(모르면 마지막)
+/// 또는 화면에 보이는 이름 순으로 정렬합니다.
+pub fn arrange_locations(
+    locations: &[Location],
+    favorites: &[String],
+    by_name: bool,
+) -> Vec<usize> {
+    let mut order: Vec<usize> = (0..locations.len()).collect();
+    order.sort_by(|&left, &right| {
+        let a = &locations[left];
+        let b = &locations[right];
+        is_favorite(b, favorites)
+            .cmp(&is_favorite(a, favorites))
+            .then_with(|| {
+                if by_name {
+                    crate::places::display(&a.country)
+                        .cmp(crate::places::display(&b.country))
+                        .then_with(|| {
+                            crate::places::display(&a.city).cmp(crate::places::display(&b.city))
+                        })
+                } else {
+                    a.ping.unwrap_or(u32::MAX).cmp(&b.ping.unwrap_or(u32::MAX))
+                }
+            })
+            .then_with(|| a.key().cmp(&b.key()))
+    });
+    order
+}
+
 static ANSI: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\))").unwrap()
 });
@@ -209,6 +244,42 @@ mod tests {
     #[test]
     fn invalid_location_output_is_an_error() {
         assert!(parse_locations("Authentication required").is_err());
+    }
+
+    fn location(iso: &str, country: &str, city: &str, ping: Option<u32>) -> Location {
+        Location {
+            iso: iso.into(),
+            country: country.into(),
+            city: city.into(),
+            ping,
+        }
+    }
+
+    #[test]
+    fn arrangement_puts_favorites_first_then_latency_or_name() {
+        let locations = vec![
+            location("US", "United States", "New York", Some(40)),
+            location("KR", "South Korea", "Seoul", Some(30)),
+            location("JP", "Japan", "Tokyo", Some(10)),
+            location("DE", "Germany", "Frankfurt", None),
+        ];
+        let favorites = vec!["JP:Tokyo".to_owned()];
+        assert_eq!(
+            arrange_locations(&locations, &favorites, false),
+            vec![2, 1, 0, 3]
+        );
+        // 응답 시간을 모르는 서버는 뒤로 밀립니다.
+        assert_eq!(arrange_locations(&locations, &[], false), vec![2, 1, 0, 3]);
+        // 화면에 보이는 한국어 이름 순서입니다.
+        assert_eq!(arrange_locations(&locations, &[], true), vec![1, 3, 0, 2]);
+        // 예전 국가 단위 즐겨찾기 키도 같은 국가의 서버를 앞으로 올립니다.
+        let legacy = vec!["US".to_owned()];
+        assert_eq!(
+            arrange_locations(&locations, &legacy, false),
+            vec![0, 2, 1, 3]
+        );
+        assert!(is_favorite(&locations[0], &legacy));
+        assert!(!is_favorite(&locations[1], &legacy));
     }
 
     #[test]

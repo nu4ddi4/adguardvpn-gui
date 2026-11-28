@@ -4,13 +4,18 @@ use gtk::gio;
 pub struct Ui {
     pub window: adw::ApplicationWindow,
     pub toast: adw::ToastOverlay,
+    pub title: adw::WindowTitle,
+    pub stack: gtk::Stack,
     pub status: gtk::Label,
+    pub icon: gtk::Image,
     pub spinner: gtk::Spinner,
     pub connect: gtk::Button,
     pub disconnect: gtk::Button,
     pub search: gtk::SearchEntry,
     pub favorites: gtk::ToggleButton,
+    pub sort_name: gtk::ToggleButton,
     pub locations: gtk::ListBox,
+    pub location_empty: adw::ActionRow,
     pub location_hint: gtk::Label,
     pub site_mode: adw::ComboRow,
     pub site_apply: gtk::Button,
@@ -25,6 +30,7 @@ pub struct Ui {
     pub auto_update: adw::SwitchRow,
     pub account: gtk::Label,
     pub account_details: gtk::TextView,
+    pub diagnostics_copy: gtk::Button,
     pub login: gtk::Button,
     pub account_refresh: gtk::Button,
     pub protocol: adw::ComboRow,
@@ -35,7 +41,10 @@ pub struct Ui {
     pub config_apply: gtk::Button,
     pub preferences_save: gtk::Button,
     pub tray_hint: gtk::Label,
+    pub error_bar: gtk::Box,
     pub error: gtk::Label,
+    pub error_copy: gtk::Button,
+    pub error_close: gtk::Button,
 }
 
 fn page() -> gtk::Box {
@@ -72,6 +81,9 @@ impl Ui {
             .build();
         let toolbar = adw::ToolbarView::new();
         let header = adw::HeaderBar::new();
+        // 모든 화면에서 연결 상태를 확인할 수 있도록 창 제목 아래에 표시합니다.
+        let title = adw::WindowTitle::new("AdGuard VPN", "상태 확인 중…");
+        header.set_title_widget(Some(&title));
         let menu = gio::Menu::new();
         menu.append(Some("계정·설정 새로 고침"), Some("app.refresh"));
         menu.append(Some("AdGuard VPN GUI 정보"), Some("app.about"));
@@ -84,18 +96,39 @@ impl Ui {
         );
         toolbar.add_top_bar(&header);
         let content = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        let error_bar = gtk::Box::builder()
+            .orientation(gtk::Orientation::Horizontal)
+            .spacing(8)
+            .margin_start(16)
+            .margin_end(16)
+            .margin_top(8)
+            .css_classes(["card"])
+            .visible(false)
+            .build();
         let error = gtk::Label::builder()
             .wrap(true)
             .selectable(true)
             .xalign(0.0)
-            .margin_start(16)
-            .margin_end(16)
-            .margin_top(8)
-            .margin_bottom(8)
+            .hexpand(true)
+            .valign(gtk::Align::Center)
             .css_classes(["error"])
-            .visible(false)
             .build();
-        content.append(&error);
+        let error_copy = gtk::Button::builder()
+            .icon_name("edit-copy-symbolic")
+            .tooltip_text("오류 내용 복사")
+            .valign(gtk::Align::Center)
+            .css_classes(["flat"])
+            .build();
+        let error_close = gtk::Button::builder()
+            .icon_name("window-close-symbolic")
+            .tooltip_text("오류 메시지 닫기")
+            .valign(gtk::Align::Center)
+            .css_classes(["flat"])
+            .build();
+        error_bar.append(&error);
+        error_bar.append(&error_copy);
+        error_bar.append(&error_close);
+        content.append(&error_bar);
         let stack = gtk::Stack::builder().vexpand(true).build();
         let switcher = gtk::StackSwitcher::builder()
             .stack(&stack)
@@ -112,6 +145,7 @@ impl Ui {
         let home = page();
         let icon = gtk::Image::from_icon_name("network-vpn-symbolic");
         icon.set_pixel_size(64);
+        icon.add_css_class("dim-label");
         home.append(&icon);
         let status = gtk::Label::builder()
             .label("VPN 상태 확인 중…")
@@ -151,6 +185,7 @@ impl Ui {
         account_group.add(&account_buttons);
         let diagnostics = adw::ExpanderRow::builder()
             .title("구독 조회 응답 원문")
+            .subtitle("문의에 붙여넣을 진단 정보를 복사할 수 있습니다.")
             .build();
         let account_details = gtk::TextView::builder()
             .editable(false)
@@ -163,6 +198,19 @@ impl Ui {
             .right_margin(8)
             .build();
         diagnostics.add_row(&account_details);
+        let diagnostics_copy = gtk::Button::with_label("진단 정보 복사");
+        diagnostics_copy.set_halign(gtk::Align::Start);
+        diagnostics_copy.set_tooltip_text(Some(
+            "실행 파일·명령·응답 원문을 클립보드에 복사합니다. 이메일 등 개인정보가 포함될 수 있습니다.",
+        ));
+        let diagnostics_actions = gtk::Box::builder()
+            .orientation(gtk::Orientation::Horizontal)
+            .margin_start(8)
+            .margin_end(8)
+            .margin_bottom(8)
+            .build();
+        diagnostics_actions.append(&diagnostics_copy);
+        diagnostics.add_row(&diagnostics_actions);
         account_group.add(&diagnostics);
         let help = gtk::LinkButton::with_label(
             "https://adguard-vpn.com/kb/adguard-vpn-for-linux/installation/",
@@ -191,6 +239,9 @@ impl Ui {
         let filters = gtk::Box::new(gtk::Orientation::Horizontal, 8);
         let favorites = gtk::ToggleButton::with_label("즐겨찾기만 표시");
         filters.append(&favorites);
+        let sort_name = gtk::ToggleButton::with_label("이름순 정렬");
+        sort_name.set_tooltip_text(Some("끄면 응답 시간이 빠른 서버부터 표시합니다."));
+        filters.append(&sort_name);
         let refresh = gtk::Button::builder()
             .icon_name("view-refresh-symbolic")
             .tooltip_text("서버 목록 새로 고침")
@@ -204,6 +255,11 @@ impl Ui {
         locations.set_selection_mode(gtk::SelectionMode::None);
         locations.add_css_class("boxed-list");
         servers.append(&locations);
+        let location_empty = adw::ActionRow::builder()
+            .title("조건에 맞는 서버가 없습니다")
+            .subtitle("검색어를 지우거나 즐겨찾기만 표시를 해제하세요.")
+            .visible(false)
+            .build();
         stack.add_titled(
             &gtk::ScrolledWindow::builder()
                 .child(&servers)
@@ -348,6 +404,15 @@ impl Ui {
         config_apply.set_sensitive(false);
         Self {
             window,
+            title,
+            stack,
+            icon,
+            error_bar,
+            error_copy,
+            error_close,
+            sort_name,
+            location_empty,
+            diagnostics_copy,
             site_mode,
             site_apply,
             site_refresh,
@@ -386,6 +451,6 @@ impl Ui {
 
     pub fn message(&self, message: &str) {
         self.error.set_label(message);
-        self.error.set_visible(!message.is_empty());
+        self.error_bar.set_visible(!message.is_empty());
     }
 }
