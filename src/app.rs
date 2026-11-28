@@ -1215,11 +1215,14 @@ mod integration_tests {
         let mut titles = Vec::new();
         let mut index = 0;
         while let Some(row) = list.row_at_index(index) {
-            if let Some(child) = row.child() {
-                if let Ok(action) = child.downcast::<adw::ActionRow>() {
-                    if action.is_visible() {
-                        titles.push(action.title().to_string());
-                    }
+            // ActionRow는 자체가 ListBoxRow라 목록에 그대로 들어가고, 감싸진 경우도 대비합니다.
+            let wrapped = row
+                .child()
+                .and_then(|child| child.downcast::<adw::ActionRow>().ok());
+            let action = row.downcast_ref::<adw::ActionRow>().cloned().or(wrapped);
+            if let Some(action) = action {
+                if action.is_visible() {
+                    titles.push(action.title().to_string());
                 }
             }
             index += 1;
@@ -1267,7 +1270,9 @@ mod integration_tests {
         assert_eq!(
             titles.first().map(String::as_str),
             Some("일본 · 도쿄"),
-            "{titles:?}"
+            "{titles:?} / 파싱 {}개 / {}",
+            controller.locations.borrow().len(),
+            controller.ui.location_hint.label()
         );
         assert!(titles.contains(&"미국 · 뉴욕".to_owned()), "{titles:?}");
         controller.ui.sort_name.set_active(true);
